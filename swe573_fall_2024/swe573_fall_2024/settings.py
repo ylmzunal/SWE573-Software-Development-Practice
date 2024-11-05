@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # other apps
+    'objects',
 ]
 
 MIDDLEWARE = [
@@ -75,8 +77,12 @@ WSGI_APPLICATION = 'swe573_fall_2024.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'object_finder_db',
+        'USER': 'swe573',  # replace with 'root' if using the root user
+        'PASSWORD': 'swe573user',  # replace with your password
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
 

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Finder</title>
+    <style>
+        /* Basic styling */
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 8px; }
+        h1 { text-align: center; color: #333; }
+        form { display: flex; flex-direction: column; align-items: center; }
+        input[type="text"], select { padding: 10px; width: 70%; border: 1px solid #ccc; border-radius: 4px; margin: 5px; }
+        button { padding: 10px 15px; border: none; background-color: #007bff; color: #fff; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .advanced-search { margin-top: 10px; text-align: center; }
+        .results-section { margin-top: 20px; }
+        .result-item { padding: 10px; border-bottom: 1px solid #ddd; }
+        .result-item strong { font-size: 1.1em; color: #007bff; }
+        .metadata { color: #555; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Object Finder</h1>
+
+        <!-- Search Form -->
+        <form method="get" action="{% url 'homepage' %}">
+            <input type="text" name="q" placeholder="Search for human-made objects" value="{{ query }}">
+
+            <!-- Advanced Search Section -->
+            <div class="advanced-search">
+                <label for="category">Filter by Category:</label>
+                <select name="category" id="category">
+                    <option value="">All Categories</option>
+                    <option value="material">Material</option>
+                    <option value="color">Color</option>
+                    <option value="function">Function</option>
+                </select>
+            </div>
+
+            <button type="submit">Search</button>
+        </form>
+
+        <!-- Results Section -->
+        <div class="results-section">
+            <h2>Search Results:</h2>
+            {% if wikidata_results %}
+                {% for result in wikidata_results %}
+                    <div class="result-item">
+                        <strong>{{ result.label }}</strong><br>
+                        <p>{{ result.description }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No results found. Try using different keywords.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
