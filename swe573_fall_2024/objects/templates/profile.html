@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ user.username }}'s Profile</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'objects/css/style.css' %}">
+</head>
+<body>
+    <div class="profile-container">
+        <header class="profile-header">
+            <h1>{{ user.username }}'s Profile</h1>
+            {% if profile.profile_picture %}
+                <img src="{{ profile.profile_picture.url }}" alt="{{ user.username }}'s Profile Picture" class="profile-picture">
+            {% else %}
+                <img src="{% static 'images/default_profile.png' %}" alt="Default Profile Picture" class="profile-picture">
+            {% endif %}
+        </header>
+
+        <section class="profile-info">
+            <p><strong>Bio:</strong> {{ profile.bio }}</p>
+            <p><strong>Total Posts:</strong> {{ profile.total_posts }}</p>
+            <p><strong>Total Comments:</strong> {{ profile.total_comments }}</p>
+            <p><strong>Upvotes:</strong> {{ profile.upvotes }}</p>
+            <p><strong>Downvotes:</strong> {{ profile.downvotes }}</p>
+        </section>
+
+        <section class="profile-badges">
+            <h3>Badges</h3>
+            <div class="badges-list">
+                {% for badge in profile.badges.all %}
+                    <img src="{{ badge.image.url }}" alt="{{ badge.name }}" title="{{ badge.name }}" class="badge-icon">
+                {% empty %}
+                    <p>No badges yet.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="profile-achievements">
+            <h3>Achievements</h3>
+            <ul class="achievements-list">
+                {% for achievement in profile.achievements.all %}
+                    <li><strong>{{ achievement.name }}:</strong> {{ achievement.description }}</li>
+                {% empty %}
+                    <p>No achievements yet.</p>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section class="user-posts">
+            <h2>Posts by {{ user.username }}</h2>
+            {% for post in profile.posts.all %}
+                <div class="post">
+                    <h3>{{ post.title }}</h3>
+                    <p>{{ post.content }}</p>
+                    <p class="post-date">Posted on {{ post.created_at }}</p>
+                </div>
+            {% empty %}
+                <p>{{ user.username }} hasn't posted anything yet.</p>
+            {% endfor %}
+        </section>
+    </div>
+</body>
+</html>

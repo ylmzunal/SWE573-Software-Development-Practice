@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Results</title>
+</head>
+<body>
+    <h1>Search Results</h1>
+    
+    {% if query %}
+        <p>Results for "<strong>{{ query }}</strong>":</p>
+    {% endif %}
+    
+    <div class="results-section">
+        {% if wikidata_results %}
+            {% for result in wikidata_results %}
+                <div class="result-item">
+                    <h2>{{ result.title }}</h2>
+                    <p>{{ result.content }}</p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No results found for "<strong>{{ query }}</strong>". Try using different keywords.</p>
+        {% endif %}
+    </div>
+    
+    <a href="{% url 'homepage' %}">Back to Search</a>
+</body>
+</html>
