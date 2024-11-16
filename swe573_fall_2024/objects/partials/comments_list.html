@@ -1,0 +1,15 @@
+{% for comment in comments %}
+    <div class="comment">
+        <p>{{ comment.content }}</p>
+        <small>
+            {% if comment.user %}
+                By {{ comment.user.username }}
+            {% else %}
+                By Anonymous
+            {% endif %}
+            on {{ comment.created_at }}
+        </small>
+    </div>
+{% empty %}
+    <p>No comments yet.</p>
+{% endfor %}

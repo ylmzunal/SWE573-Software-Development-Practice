@@ -1,19 +1,177 @@
-<!-- templates/registration/register.html -->
-
-<!-- objects/templates/register.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            border-color: #5a67d8;
+            outline: none;
+            box-shadow: 0 0 4px rgba(90, 103, 216, 0.4);
+        }
+
+        .feedback {
+            display: none;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+            text-align: left;
+        }
+
+        .feedback.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        button {
+            background: #5a67d8;
+            color: #fff;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #434190;
+        }
+
+        .info-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 1rem;
+        }
+
+        .info-text a {
+            color: #5a67d8;
+            text-decoration: none;
+        }
+
+        .info-text a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h2>Register</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Register</button>
-    </form>
-    <p>Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
+    <div class="container">
+        <h2>Create an Account</h2>
+        <div id="feedback" class="feedback"></div>
+        <form id="register-form" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password1">Password</label>
+                <input type="password" id="password1" name="password1" required>
+            </div>
+            <div class="form-group">
+                <label for="password2">Confirm Password</label>
+                <input type="password" id="password2" name="password2" required>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        <p class="info-text">
+            Already have an account? <a href="{% url 'login' %}">Login here</a>.
+        </p>
+    </div>
+
+    <script>
+        const form = document.getElementById('register-form');
+        const feedback = document.getElementById('feedback');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            feedback.style.display = 'none';
+
+            // Simulate an AJAX request
+            setTimeout(() => {
+                // Example: Replace this condition with real validation or AJAX response
+                const isSuccess = Math.random() > 0.5;
+
+                if (isSuccess) {
+                    feedback.textContent = 'Registration successful! Welcome!';
+                    feedback.className = 'feedback success';
+                } else {
+                    feedback.textContent = 'Error: Please check your information and try again.';
+                    feedback.className = 'feedback error';
+                }
+                feedback.style.display = 'block';
+            }, 1000);
+        });
+    </script>
 </body>
 </html>

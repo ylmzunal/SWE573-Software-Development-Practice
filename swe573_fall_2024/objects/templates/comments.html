@@ -1,0 +1,9 @@
+<h3>Comments</h3>
+{% for comment in comments %}
+    <div class="comment">
+        <p>{{ comment.content }}</p>
+        <small>By {{ comment.user.username }} on {{ comment.created_at }}</small>
+    </div>
+{% empty %}
+    <p>No comments yet.</p>
+{% endfor %}

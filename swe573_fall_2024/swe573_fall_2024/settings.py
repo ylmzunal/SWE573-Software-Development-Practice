@@ -16,6 +16,10 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = '/'
 # Quick-start development settings - unsuitable for production
@@ -25,7 +29,7 @@ LOGIN_REDIRECT_URL = '/'
 SECRET_KEY = 'django-insecure-y%-m80((gm!odadtwj%zycme67&5ai)-%4ell5%36lzb@l1j8p'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 

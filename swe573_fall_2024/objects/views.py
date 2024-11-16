@@ -7,8 +7,12 @@ from .forms import PostForm, CommentForm
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate
 from .forms import RegistrationForm
+from .forms import RegisterForm
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.http import JsonResponse
+
+
 
 def homepage(request):
     # Handle new post submission
@@ -60,21 +64,6 @@ def search_results(request):
     }
     return render(request, 'search_results.html', context)
 
-
-def add_comment(request, post_id):
-    post = Post.objects.get(id=post_id)
-    if request.method == 'POST':
-        comment_form = CommentForm(request.POST)
-        if comment_form.is_valid():
-            comment = comment_form.save(commit=False)
-            comment.post = post
-            comment.save()
-            return redirect('homepage')
-    else:
-        comment_form = CommentForm()
-    context = {'comment_form': comment_form, 'post': post}
-    return render(request, 'add_comment.html', context)
-
 # Dummy function to represent search logic - replace this with your actual logic
 
 def search_wikidata(query, category):
@@ -112,13 +101,13 @@ def profile_view(request, username):
 
 def register(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
+        form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)  # Log the user in after registration
-            return redirect('home')  # Redirect to 'home' after successful registration
+            login(request, user)
+            return redirect('homepage')  # Kayıt sonrası ana sayfaya yönlendir
     else:
-        form = CustomUserCreationForm()
+        form = RegisterForm()
     return render(request, 'registration/register.html', {'form': form})
 
 # Profile view
@@ -127,14 +116,73 @@ def profile(request, user_id):
     return render(request, 'profile.html', {'profile_user': user})
 
 @login_required
-def create_post(request):
+def create_post_form(request):
+    form = PostForm()
+    return render(request, 'post_form.html', {'form': form})
+
+@login_required
+def create_post_ajax(request):
+    """
+    AJAX ile Post oluşturma görünümü. 
+    Kullanıcıdan gelen POST ve FILES verilerini alır, PostForm'u doğrular ve kaydeder.
+    """
     if request.method == 'POST':
-        form = PostForm(request.POST)
+        form = PostForm(request.POST, request.FILES)  # Hem POST hem de dosyaları al
         if form.is_valid():
+            # Mevcut kullanıcının postu olduğunu belirt
             post = form.save(commit=False)
-            post.user = request.user  # Assign the logged-in user to the post
+            post.author = request.user  # Kullanıcıyı ilişkilendir
             post.save()
-            return redirect('home')
-    else:
-        form = PostForm()
-    return render(request, 'create_post.html', {'form': form})
+
+            # Başarılı yanıt döndür
+            return JsonResponse({
+                'success': True,
+                'message': 'Post başarıyla oluşturuldu.',
+                'post': {
+                    'id': post.id,
+                    'title': post.title,
+                    'content': post.content,
+                    'image_url': post.image.url if post.image else None,  # Resim URL'si
+                }
+            })
+        else:
+            # Hata durumunda, formdaki hataları JSON olarak döndür
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors.as_json(),
+            })
+
+    # POST dışındaki metodlar için hata yanıtı
+    return JsonResponse({
+        'success': False,
+        'message': 'Yalnızca POST metodu desteklenmektedir.',
+    }, status=400)
+
+
+def post_list_ajax(request):
+    posts = Post.objects.all()
+    return render(request, 'post_list.html', {'posts': posts})
+
+def post_details(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    return render(request, 'post_details.html', {'post': post})
+
+def add_comment(request, post_id):
+    if request.method == 'POST' and request.is_ajax():
+        post = get_object_or_404(Post, id=post_id)
+        content = request.POST.get('content', '').strip()
+        if content:
+            Comment.objects.create(
+                post=post,
+                user=request.user if request.user.is_authenticated else None,
+                content=content
+            )
+            # Dinamik olarak güncellenmiş yorumları döndür
+            return render(request, 'partials/comments_list.html', {'comments': post.comments.all()})
+        return JsonResponse({'error': 'Comment content cannot be empty.'}, status=400)
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def post_details(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    return render(request, 'post_details.html', {'post': post})

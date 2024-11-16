@@ -8,7 +8,7 @@ class PostForm(forms.ModelForm):
     class Meta:
         model = Post
         exclude = ['user']
-        fields = ['content', 'anonymous']  # Include only the necessary fields
+        fields = ['title', 'content', 'image']  # Include only the necessary fields
 
 class CommentForm(forms.ModelForm):
     class Meta:

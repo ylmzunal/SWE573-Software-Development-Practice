@@ -5,113 +5,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Object Finder</title>
     <style>
-        /* Basic styling */
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
-        .container { max-width: 800px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 8px; }
-        h1 { text-align: center; color: #333; }
-        .nav { text-align: right; }
-        .nav a { margin: 0 10px; text-decoration: none; color: #007bff; }
-        .nav a:hover { text-decoration: underline; }
-        form { display: flex; flex-direction: column; align-items: center; }
-        input[type="text"], select, textarea { padding: 10px; width: 70%; border: 1px solid #ccc; border-radius: 4px; margin: 5px; }
-        button { padding: 10px 15px; border: none; background-color: #007bff; color: #fff; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        .advanced-search { margin-top: 10px; text-align: center; }
-        .posts-section { margin-top: 20px; }
-        .post { border-bottom: 1px solid #ddd; padding: 10px 0; }
-        .comments { margin-top: 10px; padding-left: 20px; }
-        .comment { border-top: 1px dashed #ddd; padding: 5px 0; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 33%;
+            background-color: #f4f4f9;
+            overflow-y: auto;
+            padding: 20px;
+            border-right: 1px solid #ddd;
+        }
+
+        .main-content {
+            width: 67%;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .post {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+
+        .post:hover {
+            background: #f9f9f9;
+        }
+
+        .nav {
+            margin-bottom: 20px;
+        }
+
+        .nav a {
+            margin-right: 10px;
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .nav a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Navigation -->
+    <div class="sidebar">
         <div class="nav">
             {% if user.is_authenticated %}
                 <form method="post" action="{% url 'logout' %}" style="display: inline;">
                     {% csrf_token %}
                     <button type="submit" style="background:none;border:none;color:#007bff;cursor:pointer;">Logout</button>
                 </form>
-                |
                 <a href="{% url 'profile' user.username %}">My Profile</a>
             {% else %}
-                <a href="{% url 'login' %}">Login</a> |
+                <a href="{% url 'login' %}">Login</a>
                 <a href="{% url 'register' %}">Register</a>
             {% endif %}
         </div>
 
-        <h1>Object Finder</h1>
-
-        <!-- Search Form -->
-        <form method="get" action="{% url 'search_results' %}">
-            <input type="text" name="q" placeholder="Search for human-made objects" value="{{ query }}">
-
-            <!-- Advanced Search Section -->
-            <div class="advanced-search">
-                <label for="category">Filter by Category:</label>
-                <select name="category" id="category">
-                    <option value="">All Categories</option>
-                    <option value="material">Material</option>
-                    <option value="color">Color</option>
-                    <option value="function">Function</option>
-                </select>
-            </div>
-
-            <button type="submit">Search</button>
-        </form>
-
-        <!-- Post Form -->
-        {% if user.is_authenticated %}
-            <h2>Create a Post</h2>
-            <form method="post">
-                {% csrf_token %}
-                <input type="text" name="title" placeholder="Post title">
-                <textarea name="content" placeholder="Write your post here..."></textarea>
-                <button type="submit">Post</button>
-            </form>
-        {% else %}
-            <p>Please <a href="{% url 'login' %}">login</a> to create a post.</p>
-        {% endif %}
-
-        <!-- Display Posts and Comments -->
-        <div class="posts-section">
-            <h2>Posts</h2>
+        <h2>Posts</h2>
+        <div id="post-list">
             {% for post in posts %}
-                <div class="post">
+                <div class="post" onclick="loadPostDetails({{ post.id }})">
                     <h3>{{ post.title }}</h3>
-                    <p>{{ post.content }}</p>
-                    <p>Posted by: 
-                        {% if post.user %}
-                            {{ post.user.username }}
-                        {% else %}
-                            Anonymous
-                        {% endif %}
-                    </p>
-                    <small>Posted on {{ post.created_at }}</small>
-
-                    <!-- Display Comments -->
-                    <div class="comments">
-                        <h4>Comments:</h4>
-                        {% for comment in post.comments.all %}
-                            <div class="comment">
-                                <p>{{ comment.content }}</p>
-                                <small>Commented on {{ comment.created_at }}</small>
-                            </div>
-                        {% empty %}
-                            <p>No comments yet.</p>
-                        {% endfor %}
-                    </div>
-
-                    <!-- Add Comment Form -->
-                    <form method="post" action="{% url 'add_comment' post.id %}">
-                        {% csrf_token %}
-                        <textarea name="content" placeholder="Add a comment"></textarea>
-                        <button type="submit">Comment</button>
-                    </form>
+                    <p>{{ post.content|truncatechars:100 }}</p>
+                    {% if post.image %}
+                        <img src="{{ post.image.url }}" alt="Post Image" style="width:100%;">
+                    {% endif %}
+                    <small>By {% if post.user %} {{ post.user.username }} {% else %} Anonymous {% endif %}</small>
                 </div>
-                <hr>
             {% endfor %}
         </div>
     </div>
+
+    <div class="main-content" id="main-content">
+        <h2>Post Details</h2>
+        <p>Select a post to see its details and comments.</p>
+    </div>
+
+    {% if user.is_authenticated %}
+        <button id="create-post-btn">Yeni Post Yarat</button>
+    {% endif %}
+
+    <script>
+        document.getElementById('create-post-btn').addEventListener('click', function () {
+            fetch('/create-post-form/')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('main-content').innerHTML = html;
+                });
+        });
+
+        function loadPostDetails(postId) {
+            fetch(`/post-details/${postId}/`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('main-content').innerHTML = html;
+                });
+        }
+    </script>
 </body>
 </html>
