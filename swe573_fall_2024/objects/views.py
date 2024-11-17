@@ -32,69 +32,78 @@ def homepage(request):
     }
     return render(request, 'homepage.html', context)
 
+def search_wikidata(query):
+    """
+    Query the Wikidata API for multiple words and combine results.
+    :param query: The search term (can include multiple words)
+    :return: A list of dictionaries with 'label', 'description', and 'url' from Wikidata
+    """
+    query_terms = query.replace(",", " ").split()  # Virgülleri ve fazla boşlukları temizle
+    all_results = []  # Tüm sonuçları biriktirmek için liste
+
+    url = "https://www.wikidata.org/w/api.php"
+
+    for term in query_terms:  # Her kelime için ayrı sorgu gönder
+        params = {
+            'action': 'wbsearchentities',
+            'format': 'json',
+            'language': 'en',
+            'search': term
+        }
+        try:
+            response = requests.get(url, params=params)
+            if response.status_code == 200:
+                data = response.json()
+                for item in data.get('search', []):
+                    result = {
+                        'label': item.get('label'),
+                        'description': item.get('description'),
+                        'url': f"https://www.wikidata.org/wiki/{item.get('id')}"
+                    }
+                    if result not in all_results:  # Sonuçları tekrar eklemeden biriktir
+                        all_results.append(result)
+        except requests.exceptions.RequestException as e:
+            print(f"Wikidata API error: {e}")
+
+    return all_results
+
+
+
 
 def search_view(request):
     """
     Search functionality for both local Post model and Wikidata API.
     """
-    query = request.GET.get('q', '').strip()
-    category = request.GET.get('category', '').strip()  # Opsiyonel kategori
-    local_results = []
+    query = request.GET.get('q', '').strip()  # Kullanıcıdan gelen sorgu
+    local_results = Post.objects.none()  # Varsayılan olarak boş queryset
+    tag_results = Post.objects.none()  # Varsayılan olarak boş queryset
     wikidata_results = []
 
-    # Yerel modelden sonuçları al
     if query:
-        local_results = Post.objects.filter(
-            Q(title__icontains=query) | Q(content__icontains=query)
-        )
-        if category:
-            local_results = local_results.filter(category__icontains=category)
+        # Yerel sonuçları getir
+        terms = query.replace(",", " ").split()  # Çok kelimeli sorguyu parçalara ayır
+        for term in terms:
+            local_results = local_results | Post.objects.filter(
+                Q(title__icontains=term) | Q(content__icontains=term)
+            )
 
-        # Wikidata API'den sonuçları al
+        # Etiket sonuçlarını getir
+        for term in terms:
+            tag_results = tag_results | Post.objects.filter(
+                Q(tags__name__icontains=term)
+            )
+
+        # Wikidata sonuçlarını getir
         wikidata_results = search_wikidata(query)
 
-    # Debugging için context verilerini yazdırın
-    print("Query:", query)
-    print("Local Results:", local_results)
-    print("Wikidata Results:", wikidata_results)
-
     context = {
-        'local_results': local_results,
-        'wikidata_results': wikidata_results,
         'query': query,
+        'local_results': local_results.distinct(),
+        'tag_results': tag_results.distinct(),
+        'wikidata_results': wikidata_results,
     }
     return render(request, 'search_results.html', context)
 
-
-
-def search_wikidata(query):
-    """
-    Query the Wikidata API and return results.
-    :param query: The search term
-    :return: A list of dictionaries with 'label' and 'description' from Wikidata
-    """
-    url = "https://www.wikidata.org/w/api.php"
-    params = {
-        'action': 'wbsearchentities',
-        'format': 'json',
-        'language': 'en',
-        'search': query
-    }
-    try:
-        response = requests.get(url, params=params)
-        if response.status_code == 200:
-            data = response.json()
-            return [
-                {
-                    'label': item.get('label'),
-                    'description': item.get('description'),
-                    'url': f"https://www.wikidata.org/wiki/{item.get('id')}"
-                }
-                for item in data.get('search', [])
-            ]
-    except requests.exceptions.RequestException as e:
-        print(f"Wikidata API error: {e}")
-    return []
 
 
 

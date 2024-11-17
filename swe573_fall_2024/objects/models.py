@@ -23,6 +23,13 @@ class Object(models.Model):
 #     created_at = models.DateTimeField(auto_now_add=True)
 
 ###########
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
 class Post(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
@@ -30,6 +37,8 @@ class Post(models.Model):
     image = models.ImageField(upload_to='post_images/', null=True, blank=True)
     upvotes = models.IntegerField(default=0)  # Add upvotes field
     downvotes = models.IntegerField(default=0)  # Add downvotes field
+    tags = models.ManyToManyField(Tag, blank=True) 
+    
     material = models.CharField(              # Materyal özelliği
         max_length=100, blank=True, null=True,
         help_text="Cismin materyali (örn: ahşap, plastik, metal)"

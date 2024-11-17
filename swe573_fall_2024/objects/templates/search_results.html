@@ -4,40 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: #333;
+            text-align: left;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        ul li {
+            background: #f4f4f4;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        ul li h3 {
+            margin: 0;
+            color: #4CAF50;
+        }
+
+        ul li p {
+            margin: 5px 0;
+        }
+
+        ul li a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        ul li a:hover {
+            text-decoration: underline;
+        }
+
+        .no-results {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 <body>
-    <h1>Search Results for "{{ query }}"</h1>
+    <header>
+        <a href="/">🏠 Object Finder</a>
+    </header>
+    <div class="container">
+        <h1>Search Results for "{{ query }}"</h1>
 
-    <!-- Yerel Sonuçlar -->
-    <h2>Local Results</h2>
-    {% if local_results %}
-        <ul>
-            {% for post in local_results %}
-                <li>
-                    <h3>{{ post.title }}</h3>
-                    <p>{{ post.content }}</p>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No local results found.</p>
-    {% endif %}
+        {% comment %} <!-- Yerel Sonuçlar -->
+        <h2>Local Results</h2>
+        {% if local_results %}
+            <ul>
+                {% for post in local_results %}
+                    <li>
+                        <h3>{{ post.title }}</h3>
+                        <p>{{ post.content }}</p>
+                        <a href="/post-details/{{ post.id }}/">View Post</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="no-results">No local results found.</div>
+        {% endif %} {% endcomment %}
 
-    <!-- Wikidata Sonuçları -->
-    <h1>Search Results</h1>
-
-    <h2>Wikidata Results:</h2>
-    {% if wikidata_results %}
-        <ul>
-            {% for result in wikidata_results %}
-                <li>
-                    <strong>{{ result.label }}</strong> - {{ result.description }}
-                    <a href="{{ result.url }}" target="_blank">View</a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No results found in Wikidata.</p>
-    {% endif %}
+        <!-- Wikidata Sonuçları -->
+        <h2>Wikidata Results</h2>
+        {% if wikidata_results %}
+            <ul>
+                {% for result in wikidata_results %}
+                    <li>
+                        <strong>{{ result.label }}</strong> - {{ result.description }}
+                        <a href="{{ result.url }}" target="_blank">View on Wikidata</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="no-results">No results found in Wikidata.</div>
+        {% endif %}
+    </div>
 </body>
 </html>

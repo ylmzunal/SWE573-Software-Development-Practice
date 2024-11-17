@@ -10,7 +10,20 @@
         <li><strong>Color:</strong> {{ post.color }}</li>
         <li><strong>Shape:</strong> {{ post.shape }}</li>
         <li><strong>Weight (kg):</strong> {{ post.weight }}</li>
-     </ul>
+    </ul>
+    
+    <!-- Birleştirilmiş özellikler formu -->
+    <form action="{% url 'search_results' %}" method="GET">
+        <input type="hidden" name="q" value="
+            {% if post.material %}{{ post.material }} {% endif %}
+            {% if post.size %}{{ post.size }}cm {% endif %}
+            {% if post.color %}{{ post.color }} {% endif %}
+            {% if post.shape %}{{ post.shape }} {% endif %}
+            {% if post.weight %}{{ post.weight }}kg{% endif %}
+        ">
+        <button type="submit">Search Wikidata</button>
+    </form>
+
     {% comment %} {% if post.image %}
     <img src="{{ post.image.url }}" alt="Post Image" class="post-image">
     {% endif %} {% endcomment %}
@@ -21,6 +34,11 @@
     </div>
     <!-- Vote Buttons for Post -->
     <div class="post-votes">
+        <!-- Wiki Search Butonu -->
+        <form action="{% url 'search_results' %}" method="get">
+            <input type="hidden" name="q" value="{% for tag in post.tags.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+            <button type="submit">Wiki Search</button>
+        </form>
         <small>
             Author: {{ post.user.username }}
         </small>
@@ -36,7 +54,6 @@
         <span id="post-downvotes-{{ post.id }}">{{ post.downvotes }}</span>
     </div>
 
-
     <!-- Yorumları Görüntüleme -->
     <div id="comments-section">
         <h3>Answers</h3>
@@ -44,7 +61,7 @@
             <div class="comment">
                 <p>{{ comment.content }}</p>
                 <small>
-                    By {% if comment.user %} {{ comment.user.username }} {% else %} Anonymous {% endif %}
+                    Author: {% if comment.user %} {{ comment.user.username }} {% else %} Anonymous {% endif %}
                     | {{ comment.created_at }}
                 </small>
             </div>
@@ -52,6 +69,8 @@
             <p>No answers yet. Be the first to answer!</p>
         {% endfor %}
     </div>
+
+
     <!-- Vote Buttons for Comment -->
     <div class="comment-votes">
         <button onclick="vote('comment', {{ comment.id }}, 'upvote')">

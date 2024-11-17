@@ -2,7 +2,7 @@
 {% for comment in comments %}
     <div class="comment">
         <p>{{ comment.content }}</p>
-        <small>By {{ comment.user.username }} on {{ comment.created_at }}</small>
+        <small>By {{ comment.user }} on {{ comment.created_at }}</small>
     </div>
 {% empty %}
     <p>No comments yet.</p>

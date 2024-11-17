@@ -11,6 +11,7 @@ urlpatterns = [
     path('accounts/register/', object_views.register, name='register'),
     path('profile/<str:username>/', views.profile_view, name='profile'),
     path('search/', views.search_view, name='search_view'),
+    path('search-results/', views.search_view, name='search_results'),
     path('create-post-form/', views.create_post_form, name='create_post_form'),
     path('post-list-ajax/', views.post_list_ajax, name='post_list_ajax'),
     path('post-details/<int:post_id>/', views.post_details, name='post_details'),
