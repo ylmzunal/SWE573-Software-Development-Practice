@@ -32,42 +32,47 @@ def homepage(request):
     }
     return render(request, 'homepage.html', context)
 
-def search_view(request):
-    query = request.GET.get('q')  # Get the search term from the query parameters
-    category = request.GET.get('category')  # Optional: Get category if you want to filter by category
-    wikidata_results = []  # Initialize an empty list for results
 
-    if query:  # Check if a search query was provided
-        # Perform the search query on the model fields
-        wikidata_results = Post.objects.filter(
+def search_view(request):
+    """
+    Search functionality for both local Post model and Wikidata API.
+    """
+    query = request.GET.get('q', '').strip()
+    category = request.GET.get('category', '').strip()  # Opsiyonel kategori
+    local_results = []
+    wikidata_results = []
+
+    # Yerel modelden sonuçları al
+    if query:
+        local_results = Post.objects.filter(
             Q(title__icontains=query) | Q(content__icontains=query)
         )
-        # If category filtering is needed, add it to the filter query
         if category:
-            wikidata_results = wikidata_results.filter(category__icontains=category)
+            local_results = local_results.filter(category__icontains=category)
+
+        # Wikidata API'den sonuçları al
+        wikidata_results = search_wikidata(query)
+
+    # Debugging için context verilerini yazdırın
+    print("Query:", query)
+    print("Local Results:", local_results)
+    print("Wikidata Results:", wikidata_results)
 
     context = {
+        'local_results': local_results,
         'wikidata_results': wikidata_results,
-        'query': query,  # Pass the query to the template for display or debugging
+        'query': query,
     }
     return render(request, 'search_results.html', context)
 
-def search_results(request):
-    query = request.GET.get('q', '').strip()
-    wikidata_results = Post.objects.filter(
-        Q(title__icontains=query) | Q(content__icontains=query)
-    ) if query else None
 
-    context = {
-        'wikidata_results': wikidata_results,
-        'query': query
-    }
-    return render(request, 'search_results.html', context)
 
-# Dummy function to represent search logic - replace this with your actual logic
-
-def search_wikidata(query, category):
-    # Example of querying the Wikidata API
+def search_wikidata(query):
+    """
+    Query the Wikidata API and return results.
+    :param query: The search term
+    :return: A list of dictionaries with 'label' and 'description' from Wikidata
+    """
     url = "https://www.wikidata.org/w/api.php"
     params = {
         'action': 'wbsearchentities',
@@ -75,18 +80,23 @@ def search_wikidata(query, category):
         'language': 'en',
         'search': query
     }
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        data = response.json()
-        results = [
-            {
-                'label': item.get('label'),
-                'description': item.get('description')
-            }
-            for item in data.get('search', [])
-        ]
-        return results
+    try:
+        response = requests.get(url, params=params)
+        if response.status_code == 200:
+            data = response.json()
+            return [
+                {
+                    'label': item.get('label'),
+                    'description': item.get('description'),
+                    'url': f"https://www.wikidata.org/wiki/{item.get('id')}"
+                }
+                for item in data.get('search', [])
+            ]
+    except requests.exceptions.RequestException as e:
+        print(f"Wikidata API error: {e}")
     return []
+
+
 
 @login_required
 def profile_view(request, username):
@@ -132,39 +142,34 @@ def create_post_form(request):
     return render(request, 'post_form.html', {'form': form})
 
 
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from PIL import Image
+import logging
+
+logger = logging.getLogger(__name__)
+
 @login_required
 def create_post_ajax(request):
-    """
-    AJAX ile Post oluşturma görünümü. 
-    Kullanıcıdan gelen POST ve FILES verilerini alır, PostForm'u doğrular ve kaydeder.
-    """
     if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES)  # Hem POST hem de dosyaları al
+        form = PostForm(request.POST, request.FILES)  # Hem POST hem de dosya verilerini al
         if form.is_valid():
-            # Mevcut kullanıcının postu olduğunu belirt
-            post = form.save(commit=False)
-            post.author = request.user  # Kullanıcıyı ilişkilendir
-            
-            # Resmi silme kontrolü
-            if form.cleaned_data.get('delete_image'):
-                if post.image:  # Mevcut bir resim varsa
-                    post.image.delete(save=False)  # Resmi sil
-                post.image = None
-
-            # Post'u kaydet
-            post.save()
+            post = form.save(commit=False)  # Formu geçici olarak kaydet
+            post.author = request.user     # Mevcut kullanıcıyı yazara bağla
+            post.save()                    # Post'u kaydet
 
             # Resim boyutlandırma işlemi
             if post.image:
                 try:
                     img = Image.open(post.image.path)
                     max_size = (800, 800)  # Standart boyut
-                    img.thumbnail(max_size, Image.ANTIALIAS)
+                    img.thumbnail(max_size, Image.LANCZOS)
                     img.save(post.image.path)  # Yeniden boyutlandırılmış resmi kaydet
                 except Exception as e:
+                    logger.error(f"Resim işleme hatası: {e}")
                     return JsonResponse({
                         'success': False,
-                        'message': f'Resim işleme hatası: {str(e)}',
+                        'message': 'Resim işleme sırasında bir hata oluştu.',
                     })
 
             # Başarılı yanıt döndür
@@ -178,18 +183,13 @@ def create_post_ajax(request):
                     'image_url': post.image.url if post.image else None,  # Resim URL'si
                 }
             })
-        else:
-            # Hata durumunda, formdaki hataları JSON olarak döndür
-            return JsonResponse({
-                'success': False,
-                'errors': form.errors.as_json(),
-            })
 
-    # POST dışındaki metodlar için hata yanıtı
-    return JsonResponse({
-        'success': False,
-        'message': 'Yalnızca POST metodu desteklenmektedir.',
-    }, status=400)
+        # Form doğrulama hatalarını döndür
+        errors = {field: [str(err) for err in errs] for field, errs in form.errors.items()}
+        return JsonResponse({'success': False, 'errors': errors})
+
+    # POST dışındaki istekler için hata yanıtı
+    return JsonResponse({'success': False, 'message': 'Yalnızca POST metodu desteklenmektedir.'}, status=400)
 
 
 def post_list_ajax(request):

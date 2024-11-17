@@ -26,11 +26,33 @@ class Object(models.Model):
 class Post(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='posts', null=True, blank=True)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='posts', null=True, blank=True)
     image = models.ImageField(upload_to='post_images/', null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
     upvotes = models.IntegerField(default=0)  # Add upvotes field
     downvotes = models.IntegerField(default=0)  # Add downvotes field
+    material = models.CharField(              # Materyal özelliği
+        max_length=100, blank=True, null=True,
+        help_text="Cismin materyali (örn: ahşap, plastik, metal)"
+    )
+    size = models.FloatField(                 # Boyut özelliği
+        blank=True, null=True,
+        help_text="Cismin boyutu (örneğin: uzunluk, çap)"
+    )
+    color = models.CharField(                 # Renk özelliği
+        max_length=50, blank=True, null=True,
+        help_text="Cismin rengi (örn: kırmızı, mavi)"
+    )
+    shape = models.CharField(                 # Şekil özelliği
+        max_length=50, blank=True, null=True,
+        help_text="Cismin şekli (örn: küresel, silindirik)"
+    )
+    weight = models.FloatField(               # Ağırlık özelliği
+        blank=True, null=True,
+        help_text="Cismin ağırlığı (kg cinsinden)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     
     def __str__(self):
         return self.title

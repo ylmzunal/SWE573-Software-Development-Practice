@@ -12,7 +12,9 @@
 <body>
     <header>
         <div class="nav">
+            {% if user.is_authenticated %}
             <button id="create-post-btn" class="action-btn">Create New Post</button>
+        {% endif %}
             {% if user.is_authenticated %}
                 <form method="post" action="{% url 'logout' %}" style="display: inline;">
                     {% csrf_token %}
@@ -24,6 +26,11 @@
                 <a href="{% url 'register' %}" class="nav-link">Register</a>
             {% endif %}
         </div>
+        <!-- Wikidata Search Bar -->
+        <form method="get" action="{% url 'wikidata_search' %}">
+            <input type="text" name="q" placeholder="Search Wikidata">
+            <button type="submit">Search</button>
+        </form>
         <div class="brand">
             <h1>Object Finder</h1>
         </div>

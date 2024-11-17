@@ -2,28 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results</title>
 </head>
 <body>
-    <h1>Search Results</h1>
-    
-    {% if query %}
-        <p>Results for "<strong>{{ query }}</strong>":</p>
-    {% endif %}
-    
-    <div class="results-section">
-        {% if wikidata_results %}
-            {% for result in wikidata_results %}
-                <div class="result-item">
-                    <h2>{{ result.title }}</h2>
-                    <p>{{ result.content }}</p>
-                </div>
+    <h1>Search Results for "{{ query }}"</h1>
+
+    <!-- Yerel Sonuçlar -->
+    <h2>Local Results</h2>
+    {% if local_results %}
+        <ul>
+            {% for post in local_results %}
+                <li>
+                    <h3>{{ post.title }}</h3>
+                    <p>{{ post.content }}</p>
+                </li>
             {% endfor %}
-        {% else %}
-            <p>No results found for "<strong>{{ query }}</strong>". Try using different keywords.</p>
-        {% endif %}
-    </div>
-    
-    <a href="{% url 'homepage' %}">Back to Search</a>
+        </ul>
+    {% else %}
+        <p>No local results found.</p>
+    {% endif %}
+
+    <!-- Wikidata Sonuçları -->
+    <h1>Search Results</h1>
+
+    <h2>Wikidata Results:</h2>
+    {% if wikidata_results %}
+        <ul>
+            {% for result in wikidata_results %}
+                <li>
+                    <strong>{{ result.label }}</strong> - {{ result.description }}
+                    <a href="{{ result.url }}" target="_blank">View</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No results found in Wikidata.</p>
+    {% endif %}
 </body>
 </html>

@@ -3,21 +3,31 @@ from .models import Post, Comment
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['title', 'content', 'image']  # Formda kullanılacak alanlar
+        fields = ['title', 'content', 'material', 'size', 'color', 'shape', 'weight', 'image']  # Formda kullanılacak alanlar
+        widgets = {
+            'title': forms.TextInput(attrs={'placeholder': 'Post Başlığı'}),
+            'content': forms.Textarea(attrs={'placeholder': 'Post İçeriği'}),
+            'material': forms.TextInput(attrs={'placeholder': 'Materyal'}),
+            'size': forms.NumberInput(attrs={'placeholder': 'Boyut (cm)'}),
+            'color': forms.TextInput(attrs={'placeholder': 'Renk'}),
+            'shape': forms.TextInput(attrs={'placeholder': 'Şekil'}),
+            'weight': forms.NumberInput(attrs={'placeholder': 'Ağırlık (kg)'}),
+        }
 
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user', None)  # Kullanıcıyı formdan al
-        super(PostForm, self).__init__(*args, **kwargs)
 
-    def clean(self):
-        cleaned_data = super().clean()
-        if not self.user or not self.user.is_authenticated:
-            raise forms.ValidationError("Giriş yapmış olmanız gerekiyor.")
-        return cleaned_data
+
+    # def __init__(self, *args, **kwargs):
+    #     self.user = kwargs.pop('user', None)  # Kullanıcıyı formdan al
+    #     super(PostForm, self).__init__(*args, **kwargs)
+
+    # def clean(self):
+    #     cleaned_data = super().clean()
+    #     if not self.user or not self.user.is_authenticated:
+    #         raise forms.ValidationError("Giriş yapmış olmanız gerekiyor.")
+    #     return cleaned_data
 
 class CommentForm(forms.ModelForm):
     class Meta:
