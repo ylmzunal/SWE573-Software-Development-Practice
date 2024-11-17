@@ -7,10 +7,39 @@
 </head>
 <body>
     <h3>Create a New Post</h3>
-    <form id="new-post-form" method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Submit</button>
+        <label for="delete_image">Resmi Sil:</label>
+        {{ form.delete_image }}
+        <button type="submit">Kaydet</button>
     </form>
+    {% if form.instance.image %}
+    <div>
+        <p>Mevcut Resim:</p>
+        <img src="{{ form.instance.image.url }}" alt="Mevcut Resim" style="max-width: 200px;">
+    </div>
+{% endif %}
 </body>
+
+<script>
+    document.querySelector('#new-post-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+
+        fetch('/create-post/', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = `/post-details/${data.post.id}/`;
+            } else {
+                alert(data.error);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+</script>
 </html>

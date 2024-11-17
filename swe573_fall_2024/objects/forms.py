@@ -5,10 +5,10 @@ from django.contrib.auth.models import User
 
 
 class PostForm(forms.ModelForm):
+    delete_image = forms.BooleanField(required=False, initial=False, label='Resmi Sil')
     class Meta:
         model = Post
-        exclude = ['user']
-        fields = ['title', 'content', 'image']  # Include only the necessary fields
+        fields = ['title', 'content', 'image']
 
 class CommentForm(forms.ModelForm):
     class Meta:

@@ -16,10 +16,6 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-MEDIA_URL = '/media/'
-
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = '/'
 # Quick-start development settings - unsuitable for production
@@ -63,7 +59,8 @@ ROOT_URLCONF = 'swe573_fall_2024.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'objects', 'templates')], 
+        #'DIRS': [os.path.join(BASE_DIR, 'objects', 'templates')], 
+        'DIRS': [BASE_DIR / 'templates'], 
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -131,6 +128,17 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = [
+    BASE_DIR / "static",  # Statik dosyaların kaynak klasörü
+]
+
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / "media"  # Yüklenen medya dosyalarının kaydedileceği yer
+
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Default primary key field type

@@ -2,62 +2,107 @@
     <h2>{{ post.title }}</h2>
     <p>{{ post.content }}</p>
     {% if post.image %}
-        <img src="{{ post.image.url }}" alt="Post Image" style="max-width: 100%; height: auto;">
-    {% else %}
-    <p>Resim bulunamadı.</p>
+    <img src="{{ post.image.url }}" alt="Post Image">
     {% endif %}
-    <small>By 
-        {% if post.user %}
-            {{ post.user.username }}
-        {% else %}
-            Anonymous
-        {% endif %}
-    </small>
-    <hr>
-    <h3>Comments</h3>
+
+    <!-- Yorumları Görüntüleme -->
     <div id="comments-section">
-        {% for comment in post.comments.all %}
+        <h3>Comments</h3>
+        {% for comment in comments %}
             <div class="comment">
                 <p>{{ comment.content }}</p>
-                <small>Commented on {{ comment.created_at }}</small>
+                <small>
+                    By {% if comment.user %} {{ comment.user.username }} {% else %} Anonymous {% endif %}
+                    | {{ comment.created_at }}
+                </small>
             </div>
         {% empty %}
-            <p>No comments yet.</p>
+            <p>No comments yet. Be the first to comment!</p>
         {% endfor %}
     </div>
 
-    <form id="comment-form" method="post">
+    <!-- Yorum Ekleme Formu -->
+    <form method="POST" action="{% url 'add_comment' post.id %}">
         {% csrf_token %}
-        <textarea name="content" placeholder="Write a comment..." required></textarea>
+        <textarea name="content" placeholder="Add your comment here..." required></textarea>
         <button type="submit">Submit</button>
     </form>
 </div>
 
-<script>
-    document.getElementById('comment-form').addEventListener('submit', function(event) {
-        event.preventDefault(); // Sayfa yenilemeyi engelle
-        const formData = new FormData(this);
+{% comment %} Dinamik Ekran  {% endcomment %}
+{% comment %} <div id="post-details">
+    <h1>{{ post.title }}</h1>
+    <p>{{ post.content }}</p>
+
+    {% if post.image %}
+        <img src="{{ post.image.url }}" alt="Post Image">
+    {% endif %}
+
+    <hr>
+
+    <h2>Comments</h2>
+    <div id="comments-list">
+        {% for comment in comments %}
+    <div class="comment">
+        <p>{{ comment.content }}</p>
+        <small>
+            By 
+            {% if comment.user %}
+                {{ comment.user.username }}
+            {% else %}
+                Anonymous
+            {% endif %}
+            | {{ comment.created_at }}
+        </small>
+    </div>
+{% endfor %}
+    </div>
+
+    <hr>
+
+    <h3>Add a Comment</h3>
+    <form id="comment-form">
+        {% csrf_token %}
+        <textarea name="content" id="comment-content" rows="4" placeholder="Write your comment"></textarea>
+        <button type="submit">Submit Comment</button>
+    </form>
+</div> {% endcomment %}
+
+{% comment %} <script>
+    const form = document.getElementById('comment-form');
+    const commentsList = document.getElementById('comments-list');
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const content = document.getElementById('comment-content').value;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
         fetch("{% url 'add_comment' post.id %}", {
             method: 'POST',
-            body: new FormData(this),
             headers: {
-                'X-Requested-With': 'XMLHttpRequest',  // AJAX isteği
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
             },
+            body: JSON.stringify({ content })
         })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.error); });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const newComment = document.createElement('div');
+                newComment.classList.add('comment');
+                newComment.innerHTML = `
+                    <p>${data.comment.content}</p>
+                    <small>By ${data.comment.username} | ${data.comment.created_at}</small>
+                `;
+                commentsList.appendChild(newComment);
+                form.reset();  // Formu temizle
+            } else {
+                alert('Failed to add comment');
             }
-            return response.text();
-        })
-        .then(html => {
-            document.getElementById('comments-section').innerHTML = html;
-            this.reset(); // Formu sıfırla
         })
         .catch(error => {
             console.error('Error:', error);
-            alert(error.message);
         });
     });
-</script>
+</script>  {% endcomment %}

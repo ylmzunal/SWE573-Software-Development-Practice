@@ -1,0 +1,187 @@
+/* Genel Ayarlar */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5dc; /* Ekşi Sözlük'ün açık arka plan rengi */
+    color: #3d3d3d; /* Ekşi Sözlük'teki metin rengi */
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    background-color: #6e9d34; /* Ekşi Sözlük'ün üst çubuk rengi */
+    color: white;
+    padding: 1rem;
+    text-align: right;
+}
+
+.nav {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.nav-link, .nav-btn {
+    color: white;
+    text-decoration: none;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.nav-btn:hover, .nav-link:hover {
+    text-decoration: underline;
+}
+
+.container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 30%;
+    background-color: #e8e2e2; /* Açık yan panel rengi */
+    overflow-y: auto;
+    padding: 20px;
+    border-right: 1px solid #c8c6c6; /* Daha açık bir ayrım çizgisi */
+}
+
+.main-content {
+    width: 70%;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #dadbd4; /* Beyaz içerik arka planı */
+}
+
+.post {
+    background-color: hwb(0 75% 24%); /* Beyaz kart arka planı */
+    border: 1px solid #161515; /* Daha açık gri kenarlık */
+    border-radius: 5px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.post:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.post-image {
+    width: 100%;
+    height: auto;
+    margin-top: 10px;
+    border-radius: 4px;
+}
+
+.action-btn {
+    display: block;
+    margin: 2rem auto;
+    background-color: #6ca02d; /* Butonlarda Ekşi Sözlük yeşili */
+    color: rgb(208, 200, 200);
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background-color: #74a73e; /* Daha koyu yeşil hover rengi */
+}
+
+.sidebar .post {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.sidebar .post:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar .post-meta {
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: #555;
+    display: flex;
+    justify-content: space-between;
+}
+
+.sidebar .post-meta small {
+    margin-right: 5px;
+}
+
+.comments-section {
+    margin-top: 20px;
+    padding: 15px;
+    border-top: 1px solid #ddd;
+}
+
+.comments-section h3 {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.comments-list .comment {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 10px;
+}
+
+.comments-list .comment:last-child {
+    border-bottom: none;
+}
+
+.comments-list .comment p {
+    margin: 0;
+    color: #555;
+}
+
+.comments-list .comment small {
+    font-size: 0.85em;
+    color: #888;
+}
+
+.comment-form {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.comment-form textarea {
+    resize: none;
+    height: 80px;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+    color: #555;
+}
+
+.comment-form button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.comment-form button:hover {
+    background-color: #45a049;
+}

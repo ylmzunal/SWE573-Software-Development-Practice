@@ -1,0 +1,23 @@
+{% for comment in comments %}
+<div class="comment">
+    <strong>
+        {% if comment.user %}
+            {{ comment.user.username }}
+        {% else %}
+            Anonymous
+        {% endif %}
+    </strong>
+    <p>{{ comment.content }}</p>
+    <small>Posted on {{ comment.created_at }}</small>
+</div>
+{% endfor %}
+{% comment %} <div id="comments-section">
+    {% for comment in comments %}
+        <div class="comment">
+            <p>{{ comment.content }}</p>
+            <small>By {{ comment.user.username if comment.user else "Anonymous" }} | {{ comment.created_at }}</small>
+        </div>
+    {% empty %}
+        <p>No comments yet. Be the first to comment!</p>
+    {% endfor %}
+</div> {% endcomment %}

@@ -1,56 +1,55 @@
+/* Genel Ayarlar */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
     margin: 0;
     padding: 0;
-}
-
-.profile-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.profile-header {
-    text-align: center;
-}
-
-.profile-picture {
-    border-radius: 50%;
-    width: 120px;
-    height: 120px;
-    margin: 10px auto;
-}
-
-.profile-info, .profile-badges, .profile-achievements, .user-posts {
-    margin-top: 20px;
-}
-
-.badges-list, .achievements-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.badge-icon {
-    width: 50px;
-    height: 50px;
-}
-
-.post {
-    padding: 15px;
-    border-bottom: 1px solid #ddd;
-}
-
-.post h3 {
-    margin-top: 0;
+    background-color: #f4f4f9;
     color: #333;
 }
 
-.post-date {
-    font-size: 0.9em;
-    color: #777;
+header {
+    background-color: #6200ea;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+}
+
+.posts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    padding: 2rem;
+}
+
+.post {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    transition: transform 0.2s;
+}
+
+.post:hover {
+    transform: translateY(-5px);
+}
+
+.post h2 {
+    font-size: 1.5rem;
+    color: #6200ea;
+}
+
+.post img {
+    max-width: 100%;
+    border-radius: 4px;
+}
+
+footer {
+    text-align: center;
+    padding: 1rem;
+    background-color: #6200ea;
+    color: white;
 }

@@ -1,97 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Object Finder</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: row;
-            height: 100vh;
-        }
-
-        .sidebar {
-            width: 33%;
-            background-color: #f4f4f9;
-            overflow-y: auto;
-            padding: 20px;
-            border-right: 1px solid #ddd;
-        }
-
-        .main-content {
-            width: 67%;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .post {
-            margin-bottom: 15px;
-            padding: 10px;
-            background: #fff;
-            border: 1px solid #ddd;
-            cursor: pointer;
-        }
-
-        .post:hover {
-            background: #f9f9f9;
-        }
-
-        .nav {
-            margin-bottom: 20px;
-        }
-
-        .nav a {
-            margin-right: 10px;
-            text-decoration: none;
-            color: #007bff;
-        }
-
-        .nav a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <div class="sidebar">
+    <header>
         <div class="nav">
             {% if user.is_authenticated %}
                 <form method="post" action="{% url 'logout' %}" style="display: inline;">
                     {% csrf_token %}
-                    <button type="submit" style="background:none;border:none;color:#007bff;cursor:pointer;">Logout</button>
+                    <button type="submit" class="nav-btn">Logout</button>
                 </form>
-                <a href="{% url 'profile' user.username %}">My Profile</a>
+                <a href="{% url 'profile' user.username %}" class="nav-link">My Profile</a>
             {% else %}
-                <a href="{% url 'login' %}">Login</a>
-                <a href="{% url 'register' %}">Register</a>
+                <a href="{% url 'login' %}" class="nav-link">Login</a>
+                <a href="{% url 'register' %}" class="nav-link">Register</a>
             {% endif %}
         </div>
+    </header>
 
-        <h2>Posts</h2>
-        <div id="post-list">
-            {% for post in posts %}
-                <div class="post" onclick="loadPostDetails({{ post.id }})">
-                    <h3>{{ post.title }}</h3>
-                    <p>{{ post.content|truncatechars:100 }}</p>
-                    {% if post.image %}
-                        <img src="{{ post.image.url }}" alt="Post Image" style="width:100%;">
-                    {% endif %}
-                    <small>By {% if post.user %} {{ post.user.username }} {% else %} Anonymous {% endif %}</small>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
+    <main class="container">
+        <aside class="sidebar">
+            <h2>Posts</h2>
+            <div id="post-list">
+                {% for post in posts %}
+                    <div class="post" onclick="loadPostDetails({{ post.id }})">
+                        <h3>{{ post.title }}</h3>
+                        <p>{{ post.content|truncatechars:100 }}</p>
+                        {% if post.image %}
+                            <img src="{{ post.image.url }}" alt="Post Image" class="post-image">
+                        {% endif %}
+                        <div class="post-meta">
+                            <small>
+                                By {% if post.user %} {{ post.user.username }} {% else %} Anonymous {% endif %}
+                            </small>
+                            <small> | Date: {{ post.created_at }} | </small>
+                            <small> | Comments: {{ post.comments.count }}</small>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </aside>
 
-    <div class="main-content" id="main-content">
-        <h2>Post Details</h2>
-        <p>Select a post to see its details and comments.</p>
-    </div>
+        <section class="main-content" id="main-content">
+            <h2>Post Details</h2>
+            <p>Select a post to see its details and comments.</p>
+        </section>
+    </main>
 
     {% if user.is_authenticated %}
-        <button id="create-post-btn">Yeni Post Yarat</button>
+        <button id="create-post-btn" class="action-btn">Create New Post</button>
     {% endif %}
 
     <script>

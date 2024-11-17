@@ -1,7 +1,7 @@
 import requests
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from .models import Post, Comment
 from .forms import PostForm, CommentForm
 from django.contrib.auth.models import User
@@ -9,8 +9,10 @@ from django.contrib.auth import login, authenticate
 from .forms import RegistrationForm
 from .forms import RegisterForm
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import JsonResponse
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 
 
 
@@ -25,7 +27,7 @@ def homepage(request):
         post_form = PostForm()
 
     # Fetch all posts with related comments
-    posts = Post.objects.all().order_by('-created_at')
+    posts = Post.objects.annotate(comment_count=Count('comments')).all().order_by('-created_at')
     context = {
         'post_form': post_form,
         'posts': posts
@@ -132,6 +134,13 @@ def create_post_ajax(request):
             # Mevcut kullanıcının postu olduğunu belirt
             post = form.save(commit=False)
             post.author = request.user  # Kullanıcıyı ilişkilendir
+            
+            # Resmi silme kontrolü
+            if form.cleaned_data.get('delete_image'):
+                if post.image:  # Mevcut bir resim varsa
+                    post.image.delete(save=False)  # Resmi sil
+                post.image = None
+            
             post.save()
 
             # Başarılı yanıt döndür
@@ -167,22 +176,81 @@ def post_details(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     return render(request, 'post_details.html', {'post': post})
 
+# def add_comment(request, post_id):
+#     if request.method == 'POST' and request.is_ajax():
+#         post = get_object_or_404(Post, id=post_id)
+#         content = request.POST.get('content', '').strip()
+#         if content:
+#             Comment.objects.create(
+#                 post=post,
+#                 user=request.user if request.user.is_authenticated else None,
+#                 content=content
+#             )
+#             # Dinamik olarak güncellenmiş yorumları döndür
+#             return render(request, 'partials/comments_list.html', {'comments': post.comments.all()})
+#         return JsonResponse({'error': 'Comment content cannot be empty.'}, status=400)
+#     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+# def add_comment(request, post_id):
+#     if request.method == 'POST':
+#         post = get_object_or_404(Post, id=post_id)
+#         content = request.POST.get('content', '').strip()
+#         if content:
+#             comment = Comment.objects.create(
+#                 post=post,
+#                 user=request.user if request.user.is_authenticated else None,
+#                 content=content
+#             )
+#             # Yorum bilgilerini döndürün
+#             return JsonResponse({
+#                 'success': True,
+#                 'comment': {
+#                     'content': comment.content,
+#                     'username': comment.user.username if comment.user else "Anonymous",
+#                     'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+#                 }
+#             })
+#         return JsonResponse({'success': False, 'error': 'Comment content cannot be empty.'}, status=400)
+#     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
+
+
+# def add_comment(request, post_id):
+#     if request.method == 'POST':
+#         post = Post.objects.get(id=post_id)
+#         text = request.POST.get('comment')
+#         Comment.objects.create(post=post, user=request.user if request.user.is_authenticated else None, text=text)
+#         return HttpResponseRedirect(reverse('post_details', args=[post_id]))
+
+
+# def post_details(request, post_id):
+#     post = get_object_or_404(Post, id=post_id)
+#     comments = post.comments.all().order_by('-created_at')  # Yorumları sıralayın
+#     context = {
+#         'post': post,
+#         'comments': comments,
+#     }
+#     return render(request, 'post_details.html', context)
+
 def add_comment(request, post_id):
-    if request.method == 'POST' and request.is_ajax():
+    if request.method == 'POST':
         post = get_object_or_404(Post, id=post_id)
         content = request.POST.get('content', '').strip()
         if content:
+            # Yorum kaydet
             Comment.objects.create(
                 post=post,
                 user=request.user if request.user.is_authenticated else None,
                 content=content
             )
-            # Dinamik olarak güncellenmiş yorumları döndür
-            return render(request, 'partials/comments_list.html', {'comments': post.comments.all()})
-        return JsonResponse({'error': 'Comment content cannot be empty.'}, status=400)
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+            # Yorum eklendikten sonra ilgili gönderiye yönlendir
+            return redirect('homepage')
+        else:
+            # İçerik boşsa hata mesajı göster
+            return redirect('homepage')
 
+    return redirect('homepage')
 
 def post_details(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    return render(request, 'post_details.html', {'post': post})
+    comments = post.comments.all().order_by('created_at')  
+    return render(request, 'post_details.html', {'post': post, 'comments': comments})
