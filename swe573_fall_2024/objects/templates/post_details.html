@@ -1,13 +1,37 @@
+{% load static %}
+
 <div>
     <h2>{{ post.title }}</h2>
     <p>{{ post.content }}</p>
-    {% if post.image %}
-    <img src="{{ post.image.url }}" alt="Post Image">
-    {% endif %}
+    {% comment %} {% if post.image %}
+    <img src="{{ post.image.url }}" alt="Post Image" class="post-image">
+    {% endif %} {% endcomment %}
+    <div class="post-image-container" style="text-align: center;">
+        {% if post.image %}
+        <img src="{{ post.image.url }}" alt="{{ post.title }}" style="width: 100%; max-width: 800px; height: auto;">
+        {% endif %}
+    </div>
+    <!-- Vote Buttons for Post -->
+    <div class="post-votes">
+        <small>
+            Author: {{ post.user.username }}
+        </small>
+        <small> | Answers: {{ post.comments.count }}</small>
+        <small> | {{ post.created_at }} | </small>
+        <button onclick="vote('post', {{ post.id }}, 'upvote')">
+            &#x25B2; <!-- Up arrow -->
+        </button>
+        <span id="post-upvotes-{{ post.id }}">{{ post.upvotes }}</span>
+        <button onclick="vote('post', {{ post.id }}, 'downvote')">
+            &#x25BC; <!-- Down arrow -->
+        </button>
+        <span id="post-downvotes-{{ post.id }}">{{ post.downvotes }}</span>
+    </div>
+
 
     <!-- Yorumları Görüntüleme -->
     <div id="comments-section">
-        <h3>Comments</h3>
+        <h3>Answers</h3>
         {% for comment in comments %}
             <div class="comment">
                 <p>{{ comment.content }}</p>
@@ -17,8 +41,19 @@
                 </small>
             </div>
         {% empty %}
-            <p>No comments yet. Be the first to comment!</p>
+            <p>No answers yet. Be the first to answer!</p>
         {% endfor %}
+    </div>
+    <!-- Vote Buttons for Comment -->
+    <div class="comment-votes">
+        <button onclick="vote('comment', {{ comment.id }}, 'upvote')">
+            &#x25B2; <!-- Up arrow -->
+        </button>
+        <span id="comment-upvotes-{{ comment.id }}">{{ comment.upvotes }}</span>
+        <button onclick="vote('comment', {{ comment.id }}, 'downvote')">
+            &#x25BC; <!-- Down arrow -->
+        </button>
+        <span id="comment-downvotes-{{ comment.id }}">{{ comment.downvotes }}</span>
     </div>
 
     <!-- Yorum Ekleme Formu -->
@@ -28,6 +63,30 @@
         <button type="submit">Submit</button>
     </form>
 </div>
+
+<script>
+    function vote(type, id, voteType) {
+        const url = `/vote/${type}/${id}/${voteType}/`;
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (type === 'post') {
+                document.getElementById(`post-upvotes-${id}`).textContent = data.upvotes;
+                document.getElementById(`post-downvotes-${id}`).textContent = data.downvotes;
+            } else if (type === 'comment') {
+                document.getElementById(`comment-upvotes-${id}`).textContent = data.upvotes;
+                document.getElementById(`comment-downvotes-${id}`).textContent = data.downvotes;
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+
 
 {% comment %} Dinamik Ekran  {% endcomment %}
 {% comment %} <div id="post-details">

@@ -5,10 +5,19 @@ from django.contrib.auth.models import User
 
 
 class PostForm(forms.ModelForm):
-    delete_image = forms.BooleanField(required=False, initial=False, label='Resmi Sil')
     class Meta:
         model = Post
-        fields = ['title', 'content', 'image']
+        fields = ['title', 'content', 'image']  # Formda kullanılacak alanlar
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)  # Kullanıcıyı formdan al
+        super(PostForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not self.user or not self.user.is_authenticated:
+            raise forms.ValidationError("Giriş yapmış olmanız gerekiyor.")
+        return cleaned_data
 
 class CommentForm(forms.ModelForm):
     class Meta:

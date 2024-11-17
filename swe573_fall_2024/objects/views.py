@@ -1,18 +1,16 @@
 import requests
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from .models import Post, Comment
 from .forms import PostForm, CommentForm
-from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate
-from .forms import RegistrationForm
-from .forms import RegisterForm
+from .forms import RegistrationForm, RegisterForm
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count
-from django.http import JsonResponse
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+from PIL import Image
 
 
 
@@ -90,13 +88,24 @@ def search_wikidata(query, category):
         return results
     return []
 
+@login_required
 def profile_view(request, username):
     user = get_object_or_404(User, username=username)
-    profile = user.profile
+
+    # Fetch user-related data
+    posts = Post.objects.filter(user=user)
+    comments = Comment.objects.filter(user=user)
+
     context = {
-        'user': user,
-        'profile': profile,
-        # Include other context data as needed
+        'user_profile': user,
+        'bio': user.profile.bio if hasattr(user, 'profile') else 'No bio available.',
+        'total_posts': posts.count(),
+        'total_comments': comments.count(),
+        'upvotes': sum(post.upvotes for post in posts),  # Assuming 'upvotes' is a field in Post
+        'downvotes': sum(post.downvotes for post in posts),  # Assuming 'downvotes' is a field in Post
+        'badges': user.profile.badges if hasattr(user, 'profile') and user.profile.badges else ['No badges yet.'],
+        'achievements': user.profile.achievements if hasattr(user, 'profile') and user.profile.achievements else ['No achievements yet.'],
+        'posts': posts,
     }
     return render(request, 'profile.html', context)
 
@@ -122,6 +131,7 @@ def create_post_form(request):
     form = PostForm()
     return render(request, 'post_form.html', {'form': form})
 
+
 @login_required
 def create_post_ajax(request):
     """
@@ -140,8 +150,22 @@ def create_post_ajax(request):
                 if post.image:  # Mevcut bir resim varsa
                     post.image.delete(save=False)  # Resmi sil
                 post.image = None
-            
+
+            # Post'u kaydet
             post.save()
+
+            # Resim boyutlandırma işlemi
+            if post.image:
+                try:
+                    img = Image.open(post.image.path)
+                    max_size = (800, 800)  # Standart boyut
+                    img.thumbnail(max_size, Image.ANTIALIAS)
+                    img.save(post.image.path)  # Yeniden boyutlandırılmış resmi kaydet
+                except Exception as e:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f'Resim işleme hatası: {str(e)}',
+                    })
 
             # Başarılı yanıt döndür
             return JsonResponse({
@@ -254,3 +278,45 @@ def post_details(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     comments = post.comments.all().order_by('created_at')  
     return render(request, 'post_details.html', {'post': post, 'comments': comments})
+
+@csrf_exempt
+def vote_post(request, post_id, vote_type):
+    post = get_object_or_404(Post, id=post_id)
+    if vote_type == 'upvote':
+        post.upvotes = post.upvotes + 1 if post.upvotes is not None else 1
+    elif vote_type == 'downvote':
+        post.downvotes = post.downvotes + 1 if post.downvotes is not None else 1
+    post.save()
+    return JsonResponse({'upvotes': post.upvotes, 'downvotes': post.downvotes})
+
+@csrf_exempt
+def vote_comment(request, comment_id, vote_type):
+    comment = get_object_or_404(Comment, id=comment_id)
+    if vote_type == 'upvote':
+        comment.upvotes = comment.upvotes + 1 if comment.upvotes is not None else 1
+    elif vote_type == 'downvote':
+        comment.downvotes = comment.downvotes + 1 if comment.downvotes is not None else 1
+    comment.save()
+    return JsonResponse({'upvotes': comment.upvotes, 'downvotes': comment.downvotes})
+
+def vote(request, type, id, vote_type):
+    if request.method == 'POST':
+        if type == 'post':
+            post = Post.objects.get(id=id)
+            if vote_type == 'up':
+                post.upvotes += 1
+            elif vote_type == 'down':
+                post.downvotes += 1
+            post.save()
+            return JsonResponse({'upvotes': post.upvotes, 'downvotes': post.downvotes})
+
+        elif type == 'comment':
+            comment = Comment.objects.get(id=id)
+            if vote_type == 'up':
+                comment.upvotes += 1
+            elif vote_type == 'down':
+                comment.downvotes += 1
+            comment.save()
+            return JsonResponse({'upvotes': comment.upvotes, 'downvotes': comment.downvotes})
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)

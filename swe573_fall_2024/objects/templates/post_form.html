@@ -7,39 +7,65 @@
 </head>
 <body>
     <h3>Create a New Post</h3>
-    <form method="post" enctype="multipart/form-data">
+    <form id="post-form" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form.as_p }}
-        <label for="delete_image">Resmi Sil:</label>
-        {{ form.delete_image }}
-        <button type="submit">Kaydet</button>
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required><br>
+    
+        <label for="content">Content:</label>
+        <textarea id="content" name="content" required></textarea><br>
+    
+        <label for="image">Upload Image:</label>
+        <input type="file" id="image" name="image"><br>
+    
+        {% if post and post.image %}
+            <div>
+                <img src="{{ post.image.url }}" alt="Current Image" style="max-width: 200px;">
+                <label>
+                    <input type="checkbox" id="delete_image" name="delete_image">
+                    Remove current image
+                </label>
+            </div>
+        {% endif %}
+    
+        <button type="submit">Submit</button>
     </form>
-    {% if form.instance.image %}
-    <div>
-        <p>Mevcut Resim:</p>
-        <img src="{{ form.instance.image.url }}" alt="Mevcut Resim" style="max-width: 200px;">
-    </div>
-{% endif %}
 </body>
 
 <script>
-    document.querySelector('#new-post-form').addEventListener('submit', function (event) {
-        event.preventDefault();
-        const formData = new FormData(this);
+    const csrfToken = '{{ csrf_token }}';
+    // Handle the form submission dynamically
+    document.querySelector('#post-form').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent default form submission behavior
 
-        fetch('/create-post/', {
+        const formData = new FormData(this); // Collect form data
+
+        fetch('/create-post/', { // Use the correct endpoint for post creation
             method: 'POST',
-            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}' // Include CSRF token for security
+            },
+            body: formData, // Attach the form data
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
+                // Redirect to the post details page if successful
                 window.location.href = `/post-details/${data.post.id}/`;
             } else {
-                alert(data.error);
+                // Show error messages
+                alert(data.error || 'An error occurred while creating the post.');
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An unexpected error occurred. Please try again.');
+        });
     });
 </script>
 </html>

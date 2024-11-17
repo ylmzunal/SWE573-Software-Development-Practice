@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,22 +12,26 @@
 <body>
     <header>
         <div class="nav">
+            <button id="create-post-btn" class="action-btn">Create New Post</button>
             {% if user.is_authenticated %}
                 <form method="post" action="{% url 'logout' %}" style="display: inline;">
                     {% csrf_token %}
                     <button type="submit" class="nav-btn">Logout</button>
                 </form>
-                <a href="{% url 'profile' user.username %}" class="nav-link">My Profile</a>
+                <a href="{% url 'profile' user.username %}" class="nav-link">{{ user.username }}</a>
             {% else %}
                 <a href="{% url 'login' %}" class="nav-link">Login</a>
                 <a href="{% url 'register' %}" class="nav-link">Register</a>
             {% endif %}
         </div>
+        <div class="brand">
+            <h1>Object Finder</h1>
+        </div>
     </header>
 
     <main class="container">
         <aside class="sidebar">
-            <h2>Posts</h2>
+            <h2>Questions</h2>
             <div id="post-list">
                 {% for post in posts %}
                     <div class="post" onclick="loadPostDetails({{ post.id }})">
@@ -36,10 +42,10 @@
                         {% endif %}
                         <div class="post-meta">
                             <small>
-                                By {% if post.user %} {{ post.user.username }} {% else %} Anonymous {% endif %}
+                                Author: {{ post.user.username }}
                             </small>
-                            <small> | Date: {{ post.created_at }} | </small>
-                            <small> | Comments: {{ post.comments.count }}</small>
+                            <small> | {{ post.created_at }} | </small>
+                            <small> | Answers: {{ post.comments.count }}</small>
                         </div>
                     </div>
                 {% endfor %}
@@ -47,7 +53,7 @@
         </aside>
 
         <section class="main-content" id="main-content">
-            <h2>Post Details</h2>
+            <h2>Question Details</h2>
             <p>Select a post to see its details and comments.</p>
         </section>
     </main>

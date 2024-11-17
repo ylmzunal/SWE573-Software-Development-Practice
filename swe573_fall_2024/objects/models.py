@@ -26,15 +26,22 @@ class Object(models.Model):
 class Post(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='posts', null=True, blank=True)
     image = models.ImageField(upload_to='post_images/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    upvotes = models.IntegerField(default=0)  # Add upvotes field
+    downvotes = models.IntegerField(default=0)  # Add downvotes field
+    
+    def __str__(self):
+        return self.title
 
 class Comment(models.Model):
     post = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    upvotes = models.IntegerField(default=0)  # Add upvotes field
+    downvotes = models.IntegerField(default=0)  # Add downvotes field
 
 ###############
     
