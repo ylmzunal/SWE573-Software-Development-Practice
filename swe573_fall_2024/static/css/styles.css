@@ -344,3 +344,37 @@ h2 {
     font-style: italic;
     color: #7f8c8d;
 }
+
+/* Genel Buton Stili */
+.btn {
+    display: inline-block;        /* Blok gibi davranmasını sağlar */
+    padding: 10px 20px;          /* İçerik kenarları arası boşluk */
+    background-color: #007BFF;   /* Arkaplan rengi (mavi ton) */
+    color: white;                /* Yazı rengi */
+    text-decoration: none;       /* Alt çizgiyi kaldırır */
+    border-radius: 5px;          /* Yuvarlak köşeler */
+    font-size: 16px;             /* Yazı boyutu */
+    font-weight: bold;           /* Yazı kalınlığı */
+    text-align: center;          /* Yazıyı ortalar */
+    cursor: pointer;             /* İmleç değişimi */
+    transition: background-color 0.3s ease; /* Hover efekti için geçiş süresi */
+}
+
+/* Hover Durumu (Üzerine Gelindiğinde) */
+.btn:hover {
+    background-color: #0056b3;   /* Daha koyu bir mavi */
+}
+
+/* Aktif Durumu (Tıklandığında) */
+.btn:active {
+    background-color: #003d80;   /* Daha koyu bir mavi tonu */
+}
+
+/* Ekstra: Register Butonuna Özel Renk */
+.btn.nav-link[href="{% url 'register' %}"] {
+    background-color: #28a745;   /* Yeşil ton */
+}
+
+.btn.nav-link[href="{% url 'register' %}"]:hover {
+    background-color: #218838;   /* Daha koyu yeşil */
+}

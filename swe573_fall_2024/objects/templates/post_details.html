@@ -9,7 +9,7 @@
         <li><strong>Size (cm):</strong> {{ post.size }}</li>
         <li><strong>Color:</strong> {{ post.color }}</li>
         <li><strong>Shape:</strong> {{ post.shape }}</li>
-        <li><strong>Weight (kg):</strong> {{ post.weight }}</li>
+        <li><strong>Weight (gr):</strong> {{ post.weight }}</li>
     </ul>
 
     <form action="{% url 'search_results' %}" method="GET">
@@ -151,19 +151,19 @@
         });
     }
 </script>
-
+ 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const markSolvedBtn = document.getElementById('mark-solved-btn');
-        const commentFormContainer = document.getElementById('comment-form-container');
         const markSolvedSection = document.getElementById('mark-solved-section');
-
+        const commentFormContainer = document.getElementById('comment-form-container');
+    
         if (markSolvedBtn) {
             markSolvedBtn.addEventListener('click', function () {
                 const postId = markSolvedBtn.dataset.postId;
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-                fetch(`/mark-as-solved/${postId}/`, {
+    
+                fetch(`/post/${postId}/mark-as-solved/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': csrfToken,
@@ -173,7 +173,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success && data.solved) {
-                            // Solved durumunu göstermek için UI güncelle
+                            // UI Güncelle
                             markSolvedSection.innerHTML = '<p><strong>This post has been marked as solved.</strong></p>';
                             if (commentFormContainer) {
                                 commentFormContainer.innerHTML = ''; // Yorum formunu kaldır

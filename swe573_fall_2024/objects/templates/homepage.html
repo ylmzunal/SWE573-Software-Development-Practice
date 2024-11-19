@@ -22,8 +22,8 @@
                 </form>
                 <a href="{% url 'profile' user.username %}" class="nav-link">{{ user.username }}</a>
             {% else %}
-                <a href="{% url 'login' %}" class="nav-link">Login</a>
-                <a href="{% url 'register' %}" class="nav-link">Register</a>
+            <a href="{% url 'login' %}" class="btn nav-link">Login</a>
+            <a href="{% url 'register' %}" class="btn nav-link">Register</a>
             {% endif %}
         </div>
         <!-- Wikidata Search Bar -->
