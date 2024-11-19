@@ -8,20 +8,6 @@ class Object(models.Model):
     # Define other fields here
     # e.g., size, color, etc.
 
-# class Post(models.Model):
-#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=1)
-#     title = models.CharField(max_length=200)
-#     content = models.TextField()
-#     anonymous = models.BooleanField(default=False)
-#     image = models.ImageField(upload_to='post_images/', null=True, blank=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-
-# class Comment(models.Model):
-#     post = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
-#     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-#     content = models.TextField()
-#     created_at = models.DateTimeField(auto_now_add=True)
-
 ########### 
 
 class Tag(models.Model):

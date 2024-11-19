@@ -15,7 +15,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-@login_required
 def homepage(request):
     # Handle new post submission
     if request.method == 'POST':
@@ -88,7 +87,6 @@ def create_post_ajax(request):
         if form.is_valid():
             post = form.save(commit=False)  # Formu geçici olarak kaydet
             post.author = request.user     # Mevcut kullanıcıyı yazara bağla
-            print(f"Author: {post.author}")
             post.save()                    # Post'u kaydet
 
             # Resim boyutlandırma işlemi

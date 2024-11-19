@@ -32,7 +32,7 @@
     {% comment %} </form> {% endcomment %}
 
 
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
     <div>
         <label for="id_title">Title:</label>
