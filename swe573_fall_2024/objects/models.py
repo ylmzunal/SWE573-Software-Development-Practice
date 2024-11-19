@@ -20,6 +20,7 @@ class Post(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
     author = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='posts', null=True, blank=True)
+    solved = models.BooleanField(default=False)
     image = models.ImageField(upload_to='post_images/', null=True, blank=True)
     upvotes = models.IntegerField(default=0)  # Add upvotes field
     downvotes = models.IntegerField(default=0)  # Add downvotes field

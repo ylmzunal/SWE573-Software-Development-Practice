@@ -11,8 +11,7 @@
         <li><strong>Shape:</strong> {{ post.shape }}</li>
         <li><strong>Weight (kg):</strong> {{ post.weight }}</li>
     </ul>
-    
-    <!-- Birleştirilmiş özellikler formu -->
+
     <form action="{% url 'search_results' %}" method="GET">
         <input type="hidden" name="q" value="
             {% if post.material %}{{ post.material }} {% endif %}
@@ -24,32 +23,39 @@
         <button type="submit">Search Wikidata</button>
     </form>
 
-
     <div class="post-image-container" style="text-align: center;">
         {% if post.image %}
         <img src="{{ post.image.url }}" alt="{{ post.title }}" style="width: 100%; max-width: 800px; height: auto;">
         {% endif %}
     </div>
-    <!-- Vote Buttons for Post -->
-    <div class="post-votes">
-        <small>
-            Author: {{ post.author.username }}
-        </small>
-        <small> {% if user.is_authenticated %} | 
-            Answers: {{ post.comments.count }}
-            {% endif %} </small>
-        <small> | {{ post.created_at }} | </small>
+    <small>
+        Author: {{ post.author.username }}
+    </small>
+    <small> | {{ post.created_at }} | </small>
+    <small> {% if user.is_authenticated %} | 
+        Answers: {{ post.comments.count }}
+        {% endif %} </small>
+
+        {% if can_mark_as_solved %}
+        <form method="POST" action="{% url 'mark_as_solved' post.id %}">
+            {% csrf_token %}
+            <button type="submit">Mark as Solved</button>
+        </form>
+    {% elif post.solved %}
+        <p><strong>This post has been marked as solved.</strong></p>
+    {% endif %}
+
+   {% comment %} <div class="post-votes">
         <button onclick="vote('post', {{ post.id }}, 'upvote')">
-            &#x25B2; <!-- Up arrow -->
+            &#x25B2;
         </button>
         <span id="post-upvotes-{{ post.id }}">{{ post.upvotes }}</span>
         <button onclick="vote('post', {{ post.id }}, 'downvote')">
-            &#x25BC; <!-- Down arrow -->
+            &#x25BC;
         </button>
         <span id="post-downvotes-{{ post.id }}">{{ post.downvotes }}</span>
-    </div>
+    </div> {% endcomment %}
 
-    <!-- Yorumları Görüntüleme -->
     <div id="comments-section">
         <h3>Answers</h3>
         {% for comment in comments %}
@@ -59,30 +65,129 @@
                     Author: {% if comment.user %} {{ comment.user.username }} {% else %} Anonymous {% endif %}
                     | {{ comment.created_at }}
                 </small>
+                <!-- Oy verme butonları -->
+                <div class="comment-votes">
+                    <button class="vote-btn" onclick="voteComment({{ comment.id }}, 'upvote')">
+                        &#x25B2; <!-- Yukarı ok -->
+                    </button>
+                    <span id="comment-upvotes-{{ comment.id }}">{{ comment.upvotes }}</span>
+                    <button class="vote-btn" onclick="voteComment({{ comment.id }}, 'downvote')">
+                        &#x25BC; <!-- Aşağı ok -->
+                    </button>
+                    <span id="comment-downvotes-{{ comment.id }}">{{ comment.downvotes }}</span>
+                </div>
             </div>
         {% empty %}
             <p>No answers yet. Be the first to answer!</p>
         {% endfor %}
     </div>
 
-
-    <!-- Vote Buttons for Comment -->
-    <div class="comment-votes">
-        <button onclick="vote('comment', {{ comment.id }}, 'upvote')">
-            &#x25B2; <!-- Up arrow -->
-        </button>
-        <span id="comment-upvotes-{{ comment.id }}">{{ comment.upvotes }}</span>
-        <button onclick="vote('comment', {{ comment.id }}, 'downvote')">
-            &#x25BC; <!-- Down arrow -->
-        </button>
-        <span id="comment-downvotes-{{ comment.id }}">{{ comment.downvotes }}</span>
-    </div>
-
-    <!-- Yorum Ekleme Formu -->
-    <form method="POST" action="{% url 'add_comment' post.id %}">
+    {% if not post.solved %}
+    <form id="comment-form" method="POST" action="{% url 'add_comment' post.id %}">
         {% csrf_token %}
         <textarea name="content" placeholder="Add your comment here..." required></textarea>
         <button type="submit">Submit</button>
     </form>
+    {% endif %}
 </div>
+
+<script>
+    document.getElementById('comment-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+    
+        const formData = new FormData(this);
+    
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const commentsSection = document.getElementById('comments');
+                commentsSection.insertAdjacentHTML('beforeend', `
+                    <div class="comment">
+                        <p>${data.comment.content}</p>
+                        <small>By ${data.comment.author} | ${data.comment.created_at}</small>
+                    </div>
+                `);
+                this.reset();  // Formu sıfırla
+            } else {
+                alert('Error adding comment.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+</script>
+
+<script>
+    function voteComment(commentId, voteType) {
+        fetch('/vote-comment/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify({ comment_id: commentId, vote_type: voteType }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Güncellenen oylama sayısını UI'ye yansıt
+                document.getElementById(`comment-upvotes-${commentId}`).textContent = data.upvotes;
+                document.getElementById(`comment-downvotes-${commentId}`).textContent = data.downvotes;
+            } else {
+                alert('Oylama sırasında bir hata oluştu: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Hata:', error);
+            alert('Beklenmeyen bir hata oluştu.');
+        });
+    }
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const markSolvedBtn = document.getElementById('mark-solved-btn');
+        const commentFormContainer = document.getElementById('comment-form-container');
+        const markSolvedSection = document.getElementById('mark-solved-section');
+
+        if (markSolvedBtn) {
+            markSolvedBtn.addEventListener('click', function () {
+                const postId = markSolvedBtn.dataset.postId;
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                fetch(`/mark-as-solved/${postId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.solved) {
+                            // Solved durumunu göstermek için UI güncelle
+                            markSolvedSection.innerHTML = '<p><strong>This post has been marked as solved.</strong></p>';
+                            if (commentFormContainer) {
+                                commentFormContainer.innerHTML = ''; // Yorum formunu kaldır
+                            }
+                        } else {
+                            alert('Failed to mark as solved: ' + (data.error || 'Unknown error.'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An unexpected error occurred.');
+                    });
+            });
+        }
+    });
+</script>
 

@@ -113,28 +113,47 @@ def post_list_ajax(request):
 
 def post_details(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    comments = post.comments.all().order_by('-created_at')
-    return render(request, 'post_details.html', {'post': post, 'comments': comments})
+    comments = post.comments.order_by('created_at')
+
+    # Mantığı burada belirleyin
+    can_mark_as_solved = (
+        request.user.is_authenticated and
+        (post.author == request.user or request.user.is_superuser) and
+        not post.solved
+    )
+
+    return render(request, 'post_details.html', {
+        'post': post,
+        'comments': comments,
+        'can_mark_as_solved': can_mark_as_solved,
+    })
 
 
 def add_comment(request, post_id):
     if request.method == 'POST':
         post = get_object_or_404(Post, id=post_id)
+
+        if post.solved:
+            return JsonResponse({'success': False, 'message': 'Comments are disabled for this post as it is marked as solved.'}, status=403)
+
         content = request.POST.get('content', '').strip()
         if content:
-            # Yorum kaydet
-            Comment.objects.create(
+            comment = Comment.objects.create(
                 post=post,
                 user=request.user if request.user.is_authenticated else None,
                 content=content
             )
-            # Yorum eklendikten sonra ilgili gönderiye yönlendir
-            return redirect('homepage')
-        else:
-            # İçerik boşsa hata mesajı göster
-            return redirect('homepage')
+            return JsonResponse({
+                'success': True,
+                'comment': {
+                    'content': comment.content,
+                    'author': comment.user.username if comment.user else 'Anonymous',
+                    'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                }
+            })
+        return JsonResponse({'success': False, 'message': 'Comment content cannot be empty.'}, status=400)
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=400)
 
-    return redirect('homepage')
 
 
 @csrf_exempt
@@ -252,3 +271,33 @@ def search_view(request):
         'wikidata_results': wikidata_results,
     }
     return render(request, 'search_results.html', context)
+
+
+@csrf_exempt
+def vote_comment(request, comment_id, action):
+    if request.method == 'POST' and request.user.is_authenticated:
+        comment = get_object_or_404(Comment, id=comment_id)
+        if action == 'upvote':
+            comment.upvotes += 1
+        elif action == 'downvote':
+            comment.downvotes += 1
+        comment.save()
+        return JsonResponse({
+            'success': True,
+            'upvotes': comment.upvotes,
+            'downvotes': comment.downvotes,
+        })
+    return JsonResponse({'success': False, 'error': 'Invalid request or not authenticated.'})
+
+@login_required
+def mark_as_solved(request, post_id):
+    if request.method == 'POST':
+        post = get_object_or_404(Post, id=post_id)
+
+        # Yalnızca post sahibi veya admin işaretleyebilir
+        if post.author == request.user or request.user.is_superuser:
+            post.solved = True
+            post.save()
+            return JsonResponse({'success': True, 'message': 'Post marked as solved.'})
+        return JsonResponse({'success': False, 'message': 'You are not authorized to mark this post as solved.'}, status=403)
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=400)

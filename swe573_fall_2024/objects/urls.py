@@ -1,8 +1,9 @@
 from django.urls import path
-from . import views
+from . import views 
 from objects import views as object_views
 from django.conf import settings
 from django.conf.urls.static import static
+from .views import vote_comment
 
 
 urlpatterns = [
@@ -19,6 +20,8 @@ urlpatterns = [
     path('post-details/<int:post_id>/', views.post_details, name='post_details'),
     path('add-comment/<int:post_id>/', views.add_comment, name='add_comment'),
     path('vote/<str:type>/<int:id>/<str:vote_type>/', views.vote, name='vote'),
+    path('vote-comment/<int:comment_id>/<str:action>/', vote_comment, name='vote_comment'),
+    path('post/<int:post_id>/mark-as-solved/', views.mark_as_solved, name='mark_as_solved'),
 ]
 
 

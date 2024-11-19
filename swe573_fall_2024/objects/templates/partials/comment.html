@@ -1,0 +1,7 @@
+<div class="comment">
+    <p>{{ comment.content }}</p>
+    <small>
+        Author: {% if comment.user %} {{ comment.user.username }} {% else %} Anonymous {% endif %}
+        | {{ comment.created_at }}
+    </small>
+</div>
