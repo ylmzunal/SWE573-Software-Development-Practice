@@ -22,7 +22,7 @@ class Object(models.Model):
 #     content = models.TextField()
 #     created_at = models.DateTimeField(auto_now_add=True)
 
-###########
+########### 
 
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -77,7 +77,7 @@ class Comment(models.Model):
 ###############
     
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile_data')
     bio = models.TextField(blank=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
     # Additional fields for badges, ranks, achievements
@@ -103,3 +103,12 @@ class Achievement(models.Model):
 
     def __str__(self):
         return f'{self.user.username} - {self.badge.name}'
+    
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    bio = models.TextField(blank=True, null=True)
+    badges = models.JSONField(default=list, blank=True)  # Örnek bir badges alanı
+    achievements = models.JSONField(default=list, blank=True)  # Örnek bir achievements alanı
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"

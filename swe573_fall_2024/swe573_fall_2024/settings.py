@@ -18,6 +18,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = '/'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+ 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -134,9 +138,6 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",  # Statik dosyaların kaynak klasörü
 ]
 
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Yüklenen medya dosyalarının kaydedileceği yer
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

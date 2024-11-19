@@ -49,7 +49,7 @@
                         {% endif %}
                         <div class="post-meta">
                             <small>
-                                Author: {{ post.user.username }}
+                                Author: {% if post.author %} {{ post.author.username }} {% else %} Anonymous {% endif %}
                             </small>
                             <small> | {{ post.created_at }} | </small>
                             <small> | Answers: {{ post.comments.count }}</small>

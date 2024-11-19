@@ -35,14 +35,16 @@
     <!-- Vote Buttons for Post -->
     <div class="post-votes">
         <!-- Wiki Search Butonu -->
-        <form action="{% url 'search_results' %}" method="get">
+        {% comment %} <form action="{% url 'search_results' %}" method="get">
             <input type="hidden" name="q" value="{% for tag in post.tags.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}">
             <button type="submit">Wiki Search</button>
-        </form>
+        </form> {% endcomment %}
         <small>
-            Author: {{ post.user.username }}
+            Author: {{ post.author.username }}
         </small>
-        <small> | Answers: {{ post.comments.count }}</small>
+        <small> {% if user.is_authenticated %} | 
+            Answers: {{ post.comments.count }}
+            {% endif %} </small>
         <small> | {{ post.created_at }} | </small>
         <button onclick="vote('post', {{ post.id }}, 'upvote')">
             &#x25B2; <!-- Up arrow -->

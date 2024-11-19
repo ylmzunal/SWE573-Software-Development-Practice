@@ -3,23 +3,27 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from .models import Post, Comment
-from .forms import PostForm, CommentForm
+from .forms import PostForm, CommentForm,  RegistrationForm, RegisterForm
 from django.contrib.auth import login, authenticate
-from .forms import RegistrationForm, RegisterForm
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from PIL import Image
+import logging
 
 
+logger = logging.getLogger(__name__)
 
+@login_required
 def homepage(request):
     # Handle new post submission
     if request.method == 'POST':
-        post_form = PostForm(request.POST)
+        post_form = PostForm(request.POST, request.FILES)  # Dosyaları da al
         if post_form.is_valid():
-            post_form.save()
+            post = post_form.save(commit=False)  # Formu geçici olarak kaydet
+            post.author = request.user  # Mevcut kullanıcıyı yazar olarak ata
+            post.save()  # Post'u kaydet
             return redirect('homepage')
     else:
         post_form = PostForm()
@@ -32,87 +36,13 @@ def homepage(request):
     }
     return render(request, 'homepage.html', context)
 
-def search_wikidata(query):
-    """
-    Query the Wikidata API for multiple words and combine results.
-    :param query: The search term (can include multiple words)
-    :return: A list of dictionaries with 'label', 'description', and 'url' from Wikidata
-    """
-    query_terms = query.replace(",", " ").split()  # Virgülleri ve fazla boşlukları temizle
-    all_results = []  # Tüm sonuçları biriktirmek için liste
-
-    url = "https://www.wikidata.org/w/api.php"
-
-    for term in query_terms:  # Her kelime için ayrı sorgu gönder
-        params = {
-            'action': 'wbsearchentities',
-            'format': 'json',
-            'language': 'en',
-            'search': term
-        }
-        try:
-            response = requests.get(url, params=params)
-            if response.status_code == 200:
-                data = response.json()
-                for item in data.get('search', []):
-                    result = {
-                        'label': item.get('label'),
-                        'description': item.get('description'),
-                        'url': f"https://www.wikidata.org/wiki/{item.get('id')}"
-                    }
-                    if result not in all_results:  # Sonuçları tekrar eklemeden biriktir
-                        all_results.append(result)
-        except requests.exceptions.RequestException as e:
-            print(f"Wikidata API error: {e}")
-
-    return all_results
-
-
-
-
-def search_view(request):
-    """
-    Search functionality for both local Post model and Wikidata API.
-    """
-    query = request.GET.get('q', '').strip()  # Kullanıcıdan gelen sorgu
-    local_results = Post.objects.none()  # Varsayılan olarak boş queryset
-    tag_results = Post.objects.none()  # Varsayılan olarak boş queryset
-    wikidata_results = []
-
-    if query:
-        # Yerel sonuçları getir
-        terms = query.replace(",", " ").split()  # Çok kelimeli sorguyu parçalara ayır
-        for term in terms:
-            local_results = local_results | Post.objects.filter(
-                Q(title__icontains=term) | Q(content__icontains=term)
-            )
-
-        # Etiket sonuçlarını getir
-        for term in terms:
-            tag_results = tag_results | Post.objects.filter(
-                Q(tags__name__icontains=term)
-            )
-
-        # Wikidata sonuçlarını getir
-        wikidata_results = search_wikidata(query)
-
-    context = {
-        'query': query,
-        'local_results': local_results.distinct(),
-        'tag_results': tag_results.distinct(),
-        'wikidata_results': wikidata_results,
-    }
-    return render(request, 'search_results.html', context)
-
-
-
 
 @login_required
 def profile_view(request, username):
     user = get_object_or_404(User, username=username)
 
     # Fetch user-related data
-    posts = Post.objects.filter(user=user)
+    posts = Post.objects.filter(author=user)
     comments = Comment.objects.filter(user=user)
 
     context = {
@@ -148,15 +78,8 @@ def profile(request, user_id):
 @login_required
 def create_post_form(request):
     form = PostForm()
+    print(request.user)
     return render(request, 'post_form.html', {'form': form})
-
-
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from PIL import Image
-import logging
-
-logger = logging.getLogger(__name__)
 
 @login_required
 def create_post_ajax(request):
@@ -165,6 +88,7 @@ def create_post_ajax(request):
         if form.is_valid():
             post = form.save(commit=False)  # Formu geçici olarak kaydet
             post.author = request.user     # Mevcut kullanıcıyı yazara bağla
+            print(f"Author: {post.author}")
             post.save()                    # Post'u kaydet
 
             # Resim boyutlandırma işlemi
@@ -329,3 +253,77 @@ def vote(request, type, id, vote_type):
             return JsonResponse({'upvotes': comment.upvotes, 'downvotes': comment.downvotes})
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+
+def search_wikidata(query):
+    """
+    Query the Wikidata API for multiple words and combine results.
+    :param query: The search term (can include multiple words)
+    :return: A list of dictionaries with 'label', 'description', and 'url' from Wikidata
+    """
+    query_terms = query.replace(",", " ").split()  # Virgülleri ve fazla boşlukları temizle
+    all_results = []  # Tüm sonuçları biriktirmek için liste
+
+    url = "https://www.wikidata.org/w/api.php"
+
+    for term in query_terms:  # Her kelime için ayrı sorgu gönder
+        params = {
+            'action': 'wbsearchentities',
+            'format': 'json',
+            'language': 'en',
+            'search': term
+        }
+        try:
+            response = requests.get(url, params=params)
+            if response.status_code == 200:
+                data = response.json()
+                for item in data.get('search', []):
+                    result = {
+                        'label': item.get('label'),
+                        'description': item.get('description'),
+                        'url': f"https://www.wikidata.org/wiki/{item.get('id')}"
+                    }
+                    if result not in all_results:  # Sonuçları tekrar eklemeden biriktir
+                        all_results.append(result)
+        except requests.exceptions.RequestException as e:
+            print(f"Wikidata API error: {e}")
+
+    return all_results
+
+
+
+
+def search_view(request):
+    """
+    Search functionality for both local Post model and Wikidata API.
+    """
+    query = request.GET.get('q', '').strip()  # Kullanıcıdan gelen sorgu
+    local_results = Post.objects.none()  # Varsayılan olarak boş queryset
+    tag_results = Post.objects.none()  # Varsayılan olarak boş queryset
+    wikidata_results = []
+
+    if query:
+        # Yerel sonuçları getir
+        terms = query.replace(",", " ").split()  # Çok kelimeli sorguyu parçalara ayır
+        for term in terms:
+            local_results = local_results | Post.objects.filter(
+                Q(title__icontains=term) | Q(content__icontains=term)
+            )
+
+        # Etiket sonuçlarını getir
+        for term in terms:
+            tag_results = tag_results | Post.objects.filter(
+                Q(tags__name__icontains=term)
+            )
+
+        # Wikidata sonuçlarını getir
+        wikidata_results = search_wikidata(query)
+
+    context = {
+        'query': query,
+        'local_results': local_results.distinct(),
+        'tag_results': tag_results.distinct(),
+        'wikidata_results': wikidata_results,
+    }
+    return render(request, 'search_results.html', context)

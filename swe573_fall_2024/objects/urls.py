@@ -19,8 +19,6 @@ urlpatterns = [
     path('vote/<str:type>/<int:id>/<str:vote_type>/', views.vote, name='vote'),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # urlpatterns = [
 #     path('', views.homepage, name='homepage'),

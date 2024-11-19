@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
+        exclude = ['author']
         fields = ['title', 'content', 'material', 'size', 'color', 'shape', 'weight', 'image']  # Formda kullanılacak alanlar
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': 'Post Başlığı'}),
