@@ -1,6 +1,6 @@
 {% load static %}
 
-<div>
+<div id="post-details">
     <h2>{{ post.title }}</h2>
     <p>{{ post.content }}</p>
     <h2>Properties</h2>
@@ -24,9 +24,7 @@
         <button type="submit">Search Wikidata</button>
     </form>
 
-    {% comment %} {% if post.image %}
-    <img src="{{ post.image.url }}" alt="Post Image" class="post-image">
-    {% endif %} {% endcomment %}
+
     <div class="post-image-container" style="text-align: center;">
         {% if post.image %}
         <img src="{{ post.image.url }}" alt="{{ post.title }}" style="width: 100%; max-width: 800px; height: auto;">
@@ -34,11 +32,6 @@
     </div>
     <!-- Vote Buttons for Post -->
     <div class="post-votes">
-        <!-- Wiki Search Butonu -->
-        {% comment %} <form action="{% url 'search_results' %}" method="get">
-            <input type="hidden" name="q" value="{% for tag in post.tags.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}">
-            <button type="submit">Wiki Search</button>
-        </form> {% endcomment %}
         <small>
             Author: {{ post.author.username }}
         </small>
@@ -93,25 +86,3 @@
     </form>
 </div>
 
-<script>
-    function vote(type, id, voteType) {
-        const url = `/vote/${type}/${id}/${voteType}/`;
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (type === 'post') {
-                document.getElementById(`post-upvotes-${id}`).textContent = data.upvotes;
-                document.getElementById(`post-downvotes-${id}`).textContent = data.downvotes;
-            } else if (type === 'comment') {
-                document.getElementById(`comment-upvotes-${id}`).textContent = data.upvotes;
-                document.getElementById(`comment-downvotes-${id}`).textContent = data.downvotes;
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
-</script>

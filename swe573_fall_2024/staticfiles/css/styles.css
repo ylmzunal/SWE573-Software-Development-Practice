@@ -1,0 +1,346 @@
+/* ---------------------------------- */
+/* General Styles */
+/* ---------------------------------- */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5dc;
+    color: #4b504b;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    display: flex;
+    justify-content: space-between; /* Positions brand on the left and nav on the right */
+    align-items: center; /* Ensures vertical alignment */
+    background-color: #6c9f3a; /* Background color */
+    padding: 10px 20px;
+}
+
+.brand {
+    margin: 0;
+}
+
+.brand h1 {
+    margin: 0;
+    font-size: 1.8em; /* Adjust the font size if needed */
+    color: white;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center; /* Align links vertically */
+    gap: 20px; /* Adds space between links */
+}
+
+.nav-links a,
+.nav-links .btn {
+    text-decoration: none;
+    color: white;
+    font-size: 1em;
+    font-weight: bold;
+    padding: 5px 10px;
+    border: 1px solid transparent;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.nav-links a:hover,
+.nav-links .btn:hover {
+    background-color: white;
+    color: #6c9f3a;
+    border-radius: 5px;
+}
+
+.nav-links .btn {
+    border: 1px solid white;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+h3 {
+    color: green;
+    font-size: 1.0em;
+    font-weight: bold;
+    text-align: left;
+    margin-bottom: 20px;
+}
+h2 {
+    color: green;
+    font-size: 1.5em;
+    font-weight: bold;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.brand h1 {
+    margin: 0;
+    font-size: 1.5em;
+    color: rgb(180, 189, 180); /* Make the text green */
+}
+
+/* ---------------------------------- */
+/* Layout Styles */
+/* ---------------------------------- */
+
+.container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 30%;
+    background-color: #e8e2e2;
+    overflow-y: auto;
+    padding: 20px;
+    border-right: 1px solid #c8c6c6;
+}
+
+.main-content {
+    width: 70%;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #dadbd4;
+}
+
+/* ---------------------------------- */
+/* Post Styles */
+/* ---------------------------------- */
+
+.post {
+    background-color: hwb(0 75% 24%);
+    border: 1px solid #161515;
+    border-radius: 5px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.post:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.post-image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: 500px;
+    margin: auto;
+}
+
+.post-image {
+    max-width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+/* ---------------------------------- */
+/* Sidebar Styles */
+/* ---------------------------------- */
+
+.sidebar .post {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.sidebar .post:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar .post-meta {
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: #555;
+    display: flex;
+    justify-content: space-between;
+}
+
+.sidebar .post-meta small {
+    margin-right: 5px;
+}
+
+/* ---------------------------------- */
+/* Comment Form */
+/* ---------------------------------- */
+
+/* Center the comment section */
+.comment-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin: 20px auto;
+    width: 80%;
+    max-width: 600px;
+    padding: 20px;
+    background-color: #e4cfcf;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Label Styling */
+.form-label {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: block;
+    text-align: left;
+    width: 100%;
+    color: #333;
+}
+
+/* Textarea Styling */
+.form-input {
+    width: 100%;
+    height: 150px;
+    padding: 15px;
+    font-size: 1.1em;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: none;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+/* Button Styling */
+.form-button {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.2em;
+    color: #300303;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.form-button:hover {
+    background-color: #0056b3;
+}
+
+/* ---------------------------------- */
+/* Responsive Design */
+/* ---------------------------------- */
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar,
+    .main-content {
+        width: 100%;
+    }
+}
+
+.vote-buttons {
+    margin-top: 5px;
+    align-items: right;
+}
+
+.vote-buttons button {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    margin-right: 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.vote-buttons button:hover {
+    background-color: #e0e0e0;
+}
+
+.vote-buttons span {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* Profile Container */
+.profile-container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Section Headers */
+.profile-container h1 {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.profile-container h2 {
+    font-size: 1.8rem;
+    color: #34495e;
+    margin-top: 30px;
+}
+
+/* Profile Info */
+.profile-info p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+}
+
+/* Stats */
+.profile-stats {
+    margin-top: 10px;
+}
+
+.profile-stats p {
+    font-size: 1.1rem;
+    margin: 5px 0;
+}
+
+/* Lists */
+.profile-badges ul,
+.profile-achievements ul,
+.profile-posts ul {
+    list-style: none;
+    padding: 0;
+}
+
+.profile-badges li,
+.profile-achievements li,
+.profile-posts li {
+    padding: 10px;
+    margin-bottom: 5px;
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.profile-posts li a {
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-decoration: none;
+    color: #2980b9;
+}
+
+.profile-posts li a:hover {
+    text-decoration: underline;
+}
+
+/* No Data Messages */
+.profile-container p {
+    font-style: italic;
+    color: #7f8c8d;
+}

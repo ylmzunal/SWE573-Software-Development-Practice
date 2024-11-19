@@ -16,18 +16,24 @@ import logging
 logger = logging.getLogger(__name__)
 
 def homepage(request):
-    # Handle new post submission
     if request.method == 'POST':
-        post_form = PostForm(request.POST, request.FILES)  # Dosyaları da al
+        post_form = PostForm(request.POST, request.FILES)
         if post_form.is_valid():
-            post = post_form.save(commit=False)  # Formu geçici olarak kaydet
-            post.author = request.user  # Mevcut kullanıcıyı yazar olarak ata
-            post.save()  # Post'u kaydet
-            return redirect('homepage')
+            post = post_form.save(commit=False)
+            post.author = request.user
+            post.save()
+            return JsonResponse({
+                'success': True,
+                'post': {
+                    'id': post.id,
+                    'title': post.title,
+                    'content': post.content,
+                }
+            })
+        return JsonResponse({'success': False, 'error': 'Invalid form submission'})
     else:
         post_form = PostForm()
 
-    # Fetch all posts with related comments
     posts = Post.objects.annotate(comment_count=Count('comments')).all().order_by('-created_at')
     context = {
         'post_form': post_form,
@@ -74,117 +80,42 @@ def profile(request, user_id):
     user = get_object_or_404(User, id=user_id)
     return render(request, 'profile.html', {'profile_user': user})
 
-@login_required
 def create_post_form(request):
     form = PostForm()
-    print(request.user)
     return render(request, 'post_form.html', {'form': form})
 
 @login_required
 def create_post_ajax(request):
     if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES)  # Hem POST hem de dosya verilerini al
+        form = PostForm(request.POST, request.FILES)  # Form verilerini ve dosyaları alın
         if form.is_valid():
-            post = form.save(commit=False)  # Formu geçici olarak kaydet
-            post.author = request.user     # Mevcut kullanıcıyı yazara bağla
-            post.save()                    # Post'u kaydet
+            post = form.save(commit=False)
+            post.author = request.user  # Mevcut kullanıcıyı yazara bağla
+            post.save()
 
-            # Resim boyutlandırma işlemi
-            if post.image:
-                try:
-                    img = Image.open(post.image.path)
-                    max_size = (800, 800)  # Standart boyut
-                    img.thumbnail(max_size, Image.LANCZOS)
-                    img.save(post.image.path)  # Yeniden boyutlandırılmış resmi kaydet
-                except Exception as e:
-                    logger.error(f"Resim işleme hatası: {e}")
-                    return JsonResponse({
-                        'success': False,
-                        'message': 'Resim işleme sırasında bir hata oluştu.',
-                    })
-
-            # Başarılı yanıt döndür
+            # JSON yanıtında image_url bilgisi gönderin
             return JsonResponse({
                 'success': True,
-                'message': 'Post başarıyla oluşturuldu.',
                 'post': {
                     'id': post.id,
                     'title': post.title,
                     'content': post.content,
+                    'author': post.author.username,
                     'image_url': post.image.url if post.image else None,  # Resim URL'si
                 }
             })
-
-        # Form doğrulama hatalarını döndür
-        errors = {field: [str(err) for err in errs] for field, errs in form.errors.items()}
-        return JsonResponse({'success': False, 'errors': errors})
-
-    # POST dışındaki istekler için hata yanıtı
-    return JsonResponse({'success': False, 'message': 'Yalnızca POST metodu desteklenmektedir.'}, status=400)
-
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 def post_list_ajax(request):
     posts = Post.objects.all()
     return render(request, 'post_list.html', {'posts': posts})
 
+
 def post_details(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    return render(request, 'post_details.html', {'post': post})
+    comments = post.comments.all().order_by('-created_at')
+    return render(request, 'post_details.html', {'post': post, 'comments': comments})
 
-# def add_comment(request, post_id):
-#     if request.method == 'POST' and request.is_ajax():
-#         post = get_object_or_404(Post, id=post_id)
-#         content = request.POST.get('content', '').strip()
-#         if content:
-#             Comment.objects.create(
-#                 post=post,
-#                 user=request.user if request.user.is_authenticated else None,
-#                 content=content
-#             )
-#             # Dinamik olarak güncellenmiş yorumları döndür
-#             return render(request, 'partials/comments_list.html', {'comments': post.comments.all()})
-#         return JsonResponse({'error': 'Comment content cannot be empty.'}, status=400)
-#     return JsonResponse({'error': 'Invalid request'}, status=400)
-
-# def add_comment(request, post_id):
-#     if request.method == 'POST':
-#         post = get_object_or_404(Post, id=post_id)
-#         content = request.POST.get('content', '').strip()
-#         if content:
-#             comment = Comment.objects.create(
-#                 post=post,
-#                 user=request.user if request.user.is_authenticated else None,
-#                 content=content
-#             )
-#             # Yorum bilgilerini döndürün
-#             return JsonResponse({
-#                 'success': True,
-#                 'comment': {
-#                     'content': comment.content,
-#                     'username': comment.user.username if comment.user else "Anonymous",
-#                     'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-#                 }
-#             })
-#         return JsonResponse({'success': False, 'error': 'Comment content cannot be empty.'}, status=400)
-#     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
-
-
-# def add_comment(request, post_id):
-#     if request.method == 'POST':
-#         post = Post.objects.get(id=post_id)
-#         text = request.POST.get('comment')
-#         Comment.objects.create(post=post, user=request.user if request.user.is_authenticated else None, text=text)
-#         return HttpResponseRedirect(reverse('post_details', args=[post_id]))
-
-
-# def post_details(request, post_id):
-#     post = get_object_or_404(Post, id=post_id)
-#     comments = post.comments.all().order_by('-created_at')  # Yorumları sıralayın
-#     context = {
-#         'post': post,
-#         'comments': comments,
-#     }
-#     return render(request, 'post_details.html', context)
 
 def add_comment(request, post_id):
     if request.method == 'POST':
@@ -205,10 +136,6 @@ def add_comment(request, post_id):
 
     return redirect('homepage')
 
-def post_details(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-    comments = post.comments.all().order_by('created_at')  
-    return render(request, 'post_details.html', {'post': post, 'comments': comments})
 
 @csrf_exempt
 def vote_post(request, post_id, vote_type):

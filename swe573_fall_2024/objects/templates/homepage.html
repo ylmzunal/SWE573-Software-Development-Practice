@@ -66,7 +66,7 @@
     </main>
 
     {% if user.is_authenticated %}
-        <button id="create-post-btn" class="action-btn">Create New Post</button>
+        <button id="create-post-btn" class="action-btn" >Create New Post</button>
     {% endif %}
 
     <script>
@@ -75,16 +75,68 @@
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('main-content').innerHTML = html;
+        
+                    // Formu dinle
+                    const postForm = document.getElementById('post-form');
+                    postForm.addEventListener('submit', async function (event) {
+                        event.preventDefault();
+        
+                        const formData = new FormData(postForm);
+                        const response = await fetch('/create-post/', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            },
+                            body: formData,
+                        });
+        
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.success) {
+                                // Yeni postu sol listeye ekle
+                                const postList = document.getElementById('post-list');
+                                const newPostHTML = `
+                                    <div class="post" id="post-${data.post.id}">
+                                        <h3>${data.post.title}</h3>
+                                        <p>${data.post.content}</p>
+                                        ${data.post.image_url ? `<img src="${data.post.image_url}" alt="Post Image" style="width: 100%; max-width: 800px; height: auto;">` : ''}
+                                        <small>By ${data.post.author}</small>
+                                    </div>
+                                `;
+                                postList.insertAdjacentHTML('afterbegin', newPostHTML);
+        
+                                // Yeni post'a tıklama olayını bağla
+                                const newPostElement = document.getElementById(`post-${data.post.id}`);
+                                newPostElement.addEventListener('click', function () {
+                                    loadPostDetails(data.post.id);
+                                });
+        
+                                // Yeni post'a tıklama simüle et
+                                newPostElement.click();
+                            } else {
+                                alert('Error: ' + JSON.stringify(data.errors));
+                            }
+                        } else {
+                            alert('Unexpected error occurred.');
+                        }
+                    });
                 });
         });
-
+        
+        // Post detaylarını yükleme fonksiyonu
         function loadPostDetails(postId) {
             fetch(`/post-details/${postId}/`)
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('main-content').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading post details:', error);
+                    alert('Unable to load post details.');
                 });
         }
     </script>
+    
+
 </body>
 </html>
