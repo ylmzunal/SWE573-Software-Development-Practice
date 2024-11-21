@@ -85,7 +85,7 @@ body {
 .btn {
     display: inline-block;        /* Blok gibi davranmasını sağlar */
     padding: 10px 20px;          /* İçerik kenarları arası boşluk */
-    background-color: #007BFF;   /* Arkaplan rengi (mavi ton) */
+    background-color: #a3a6aa;   /* Arkaplan rengi (mavi ton) */
     color: white;                /* Yazı rengi */
     text-decoration: none;       /* Alt çizgiyi kaldırır */
     border-radius: 5px;          /* Yuvarlak köşeler */

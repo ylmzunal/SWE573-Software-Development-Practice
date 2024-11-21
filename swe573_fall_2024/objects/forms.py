@@ -1,5 +1,5 @@
 from django import forms
-from .models import Post, Comment
+from .models import Post, Comment, Profile
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
@@ -59,3 +59,9 @@ class RegistrationForm(forms.ModelForm):
         if password and password_confirm and password != password_confirm:
             self.add_error('password_confirm', "Passwords do not match")
         return cleaned_data
+    
+
+    class ProfileForm(forms.ModelForm):
+        class Meta:
+            model = Profile
+            fields = ['profile_picture']

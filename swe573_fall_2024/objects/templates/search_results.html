@@ -118,6 +118,40 @@
         {% else %}
             <div class="no-results">No results found in Wikidata.</div>
         {% endif %}
+
+
+{% comment %} <!-- Yerel Sonuçlar -->
+    <h2>Local Results</h2>
+    {% if local_results %}
+        <ul>
+            {% for post in local_results %}
+                <li>
+                    <h3>{{ post.title }}</h3>
+                    <p>{{ post.content|truncatechars:150 }}</p>
+                    <a href="/post-details/{{ post.id }}/" class="btn btn-primary">View Post</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No local results found.</p>
+    {% endif %}
+
+    <!-- Wikidata Sonuçları -->
+    <h2>Wikidata Results</h2>
+    {% if wikidata_results %}
+        <ul>
+            {% for result in wikidata_results %}
+                <li>
+                    <strong>{{ result.label }}</strong> - {{ result.description }}
+                    <a href="{{ result.url }}" target="_blank">View on Wikidata</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No results found in Wikidata.</p>
+    {% endif %} {% endcomment %}
+
+
     </div>
 </body>
 </html>

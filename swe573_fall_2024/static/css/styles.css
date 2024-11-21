@@ -151,9 +151,17 @@ h2 {
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 5px;
-    background-color: #f9f9f9;
+    background-color: #e7e2e2;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Sidebar İçerisindeki Post Resimlerini Ortala */
+.sidebar .post img {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    border-radius: 5px;
 }
 
 .sidebar .post:hover {
@@ -164,7 +172,7 @@ h2 {
 .sidebar .post-meta {
     margin-top: 5px;
     font-size: 0.9em;
-    color: #555;
+    color: green;
     display: flex;
     justify-content: space-between;
 }
@@ -222,7 +230,7 @@ h2 {
     padding: 15px;
     font-size: 1.2em;
     color: #300303;
-    background-color: #007bff;
+    background-color: #8e8f90;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -230,7 +238,7 @@ h2 {
 }
 
 .form-button:hover {
-    background-color: #0056b3;
+    background-color: #a5a8ab;
 }
 
 /* ---------------------------------- */
@@ -349,8 +357,8 @@ h2 {
 .btn {
     display: inline-block;        /* Blok gibi davranmasını sağlar */
     padding: 10px 20px;          /* İçerik kenarları arası boşluk */
-    background-color: #007BFF;   /* Arkaplan rengi (mavi ton) */
-    color: white;                /* Yazı rengi */
+    background-color: #e7e2e2;   /* Arkaplan rengi (mavi ton) */
+    color: green;                /* Yazı rengi */
     text-decoration: none;       /* Alt çizgiyi kaldırır */
     border-radius: 5px;          /* Yuvarlak köşeler */
     font-size: 16px;             /* Yazı boyutu */
@@ -362,7 +370,7 @@ h2 {
 
 /* Hover Durumu (Üzerine Gelindiğinde) */
 .btn:hover {
-    background-color: #0056b3;   /* Daha koyu bir mavi */
+    background-color: #828384;   /* Daha koyu bir mavi */
 }
 
 /* Aktif Durumu (Tıklandığında) */

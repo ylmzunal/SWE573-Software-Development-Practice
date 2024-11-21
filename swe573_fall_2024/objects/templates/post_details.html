@@ -23,6 +23,20 @@
         <button type="submit">Search Wikidata</button>
     </form>
 
+        <!-- NLP ile Çıkarılan Anahtar Kelimeler -->
+        <h3>Extracted Keywords:</h3>
+        <ul>
+            {% for keyword in keywords %}
+                <li>{{ keyword }}</li>
+            {% endfor %}
+        </ul>
+    
+        <!-- Anahtar Kelimelerle Wikidata Arama Butonu -->
+        {% comment %} <form action="{% url 'search_results' %}" method="GET" class="wikidata-search-form">
+            <input type="hidden" name="q" value="{% for keyword in keywords %}{{ keyword }} {% endfor %}">
+            <button type="submit" class="btn btn-primary">Search Wikidata</button>
+        </form> {% endcomment %}
+
     <div class="post-image-container" style="text-align: center;">
         {% if post.image %}
         <img src="{{ post.image.url }}" alt="{{ post.title }}" style="width: 100%; max-width: 800px; height: auto;">

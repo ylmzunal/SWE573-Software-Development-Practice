@@ -11,9 +11,14 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from PIL import Image
 import logging
+import spacy
+from SPARQLWrapper import SPARQLWrapper, JSON
+from .utils import find_best_match
+from .wikidata_utils import search_wikidata_nlp
 
 
 logger = logging.getLogger(__name__)
+
 
 def homepage(request):
     if request.method == 'POST':
@@ -114,6 +119,7 @@ def post_list_ajax(request):
 def post_details(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     comments = post.comments.order_by('created_at')
+    results = find_object_from_post(post_id)
 
     # Mantığı burada belirleyin
     can_mark_as_solved = (
@@ -125,6 +131,7 @@ def post_details(request, post_id):
     return render(request, 'post_details.html', {
         'post': post,
         'comments': comments,
+        'keywords': results['keywords'],  
         'can_mark_as_solved': can_mark_as_solved,
     })
 
@@ -200,6 +207,145 @@ def vote(request, type, id, vote_type):
 
 
 
+@csrf_exempt
+def vote_comment(request, comment_id, action):
+    if request.method == 'POST' and request.user.is_authenticated:
+        comment = get_object_or_404(Comment, id=comment_id)
+        if action == 'upvote':
+            comment.upvotes += 1
+        elif action == 'downvote':
+            comment.downvotes += 1
+        comment.save()
+        return JsonResponse({
+            'success': True,
+            'upvotes': comment.upvotes,
+            'downvotes': comment.downvotes,
+        })
+    return JsonResponse({'success': False, 'error': 'Invalid request or not authenticated.'})
+
+@login_required
+def mark_as_solved(request, post_id):
+    if request.method == 'POST':
+        post = get_object_or_404(Post, id=post_id)
+
+        # Yalnızca post sahibi veya admin işaretleyebilir
+        if post.author == request.user or request.user.is_superuser:
+            post.solved = True
+            post.save()
+            return JsonResponse({'success': True, 'message': 'Post marked as solved.'})
+        return JsonResponse({'success': False, 'message': 'You are not authorized to mark this post as solved.'}, status=403)
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=400)
+
+
+######################### AI Agent ####################
+
+
+nlp = spacy.load("en_core_web_sm")
+
+def extract_keywords(text):
+    """Verilen metinden anahtar kelimeleri çıkarır."""
+    if not text:
+        print("No text provided to extract_keywords.")
+        return []
+    
+    doc = nlp(text)
+    keywords = [token.text.lower() for token in doc if token.is_alpha and not token.is_stop]
+    return keywords
+
+
+# def search_wikidata(keywords):
+#     """Wikidata üzerinde anahtar kelimelerle arama yapar ve Post-like sonuçlar döner."""
+#     if not keywords:
+#         print("No keywords provided for Wikidata search.")
+#         return []
+
+#     sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
+#     query_keywords = ' '.join(keywords)
+#     query = f"""
+#     SELECT ?item ?itemLabel ?description
+#     WHERE {{
+#         ?item ?label "{query_keywords}"@en.
+#         OPTIONAL {{ ?item schema:description ?description. FILTER (lang(?description) = "en") }}
+#         SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
+#     }}
+#     LIMIT 10
+#     """
+#     sparql.setQuery(query)
+#     sparql.setReturnFormat(JSON)
+
+#     try:
+#         results = sparql.query().convert()
+#         objects = []
+#         for result in results["results"]["bindings"]:
+#             objects.append({
+#                 "title": result["itemLabel"]["value"],
+#                 "content": result.get("description", {}).get("value", "No description available"),
+#                 "url": result["item"]["value"]
+#             })
+#         print("Wikidata search results:", objects)
+#         return objects
+#     except Exception as e:
+#         print(f"Error querying Wikidata: {e}")
+#         return []
+    
+
+
+def find_object_from_post(post_id):
+    print("find_object_from_post function is called with post_id:", post_id)
+    post = get_object_or_404(Post, id=post_id)
+    comments = post.comments.all()
+
+    # Post ve yorum içeriklerinden anahtar kelimeleri çıkar
+    print("Post content:", post.content)
+    post_keywords = extract_keywords(post.content)
+    
+    comment_keywords = []
+    for comment in comments:
+        print("Comment content:", comment.content)
+        comment_keywords.extend(extract_keywords(comment.content))
+
+    all_keywords = list(set(post_keywords + comment_keywords))
+    print("All keywords extracted:", all_keywords)
+
+    # Etiketlerden anahtar kelimeleri ekle
+    tag_keywords = [tag.name.lower() for tag in post.tags.all()]
+    all_keywords.extend(tag_keywords)
+
+    # Wikidata'da arama yap
+    wikidata_results = "No results"    #search_wikidata(all_keywords)
+    # print("Wikidata results:", wikidata_results)
+
+    return {
+        'keywords': all_keywords,
+        'wikidata_results': wikidata_results
+    }
+
+
+# def search_wikidata(keywords):
+#     """Wikidata üzerinde anahtar kelimelerle arama yapar."""
+#     sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
+#     query = f"""
+#     SELECT ?item ?itemLabel
+#     WHERE {{
+#         ?item ?label "{' '.join(keywords)}"@en.
+#         SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
+#     }}
+#     LIMIT 10
+#     """
+#     sparql.setQuery(query)
+#     sparql.setReturnFormat(JSON)
+#     results = sparql.query().convert()
+
+#     objects = []
+#     for result in results["results"]["bindings"]:
+#         objects.append({
+#             "id": result["item"]["value"],
+#             "label": result["itemLabel"]["value"]
+#         })
+#     return objects
+
+# Wiki Old version
+
 def search_wikidata(query):
     """
     Query the Wikidata API for multiple words and combine results.
@@ -273,31 +419,24 @@ def search_view(request):
     return render(request, 'search_results.html', context)
 
 
-@csrf_exempt
-def vote_comment(request, comment_id, action):
-    if request.method == 'POST' and request.user.is_authenticated:
-        comment = get_object_or_404(Comment, id=comment_id)
-        if action == 'upvote':
-            comment.upvotes += 1
-        elif action == 'downvote':
-            comment.downvotes += 1
-        comment.save()
-        return JsonResponse({
-            'success': True,
-            'upvotes': comment.upvotes,
-            'downvotes': comment.downvotes,
-        })
-    return JsonResponse({'success': False, 'error': 'Invalid request or not authenticated.'})
+def analyze_post(request, post_id):
+    # Gönderiyi al
+    post = get_object_or_404(Post, id=post_id)
+    objects = Object.objects.all()
 
-@login_required
-def mark_as_solved(request, post_id):
-    if request.method == 'POST':
-        post = get_object_or_404(Post, id=post_id)
+    # Yerel veritabanı eşleştirmesi
+    matched_object, similarity = find_best_match(post.content, objects)
 
-        # Yalnızca post sahibi veya admin işaretleyebilir
-        if post.author == request.user or request.user.is_superuser:
-            post.solved = True
-            post.save()
-            return JsonResponse({'success': True, 'message': 'Post marked as solved.'})
-        return JsonResponse({'success': False, 'message': 'You are not authorized to mark this post as solved.'}, status=403)
-    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=400)
+    # Wikidata araması
+    wikidata_results = search_wikidata_nlp(post.content, limit=5)
+
+    # Eşleşen nesneyi kaydet (yerel eşleştirme)
+    post.matched_object = matched_object
+    post.save()
+
+    return render(request, 'post_analysis.html', {
+        'post': post,
+        'matched_object': matched_object,
+        'similarity': round(similarity * 100, 2),
+        'wikidata_results': wikidata_results,
+    })

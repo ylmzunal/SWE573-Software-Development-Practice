@@ -13,6 +13,7 @@ urlpatterns = [
     path('profile/<str:username>/', views.profile_view, name='profile'),
     path('search/', views.search_view, name='search_view'),
     path('search-results/', views.search_view, name='search_results'),
+    #path('search-results/<int:post_id>/', views.search_view, name='search_results'),
     path('create-post-form/', views.create_post_form, name='create_post_form'),
     path('post-list-ajax/', views.post_list_ajax, name='post_list_ajax'),
     path('create-post/', views.create_post_ajax, name='create_post_form'),
@@ -22,6 +23,7 @@ urlpatterns = [
     path('vote/<str:type>/<int:id>/<str:vote_type>/', views.vote, name='vote'),
     path('vote-comment/<int:comment_id>/<str:action>/', vote_comment, name='vote_comment'),
     path('post/<int:post_id>/mark-as-solved/', views.mark_as_solved, name='mark_as_solved'),
+    path('post/<int:post_id>/analyze/', views.analyze_post, name='analyze_post'),
 ]
 
 
