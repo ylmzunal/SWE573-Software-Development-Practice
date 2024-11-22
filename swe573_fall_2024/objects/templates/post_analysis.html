@@ -8,21 +8,12 @@
     <h2>{{ post.title }}</h2>
     <p>{{ post.content }}</p>
 
-    <h2>Matched Object (Local Database)</h2>
-    {% if matched_object %}
-        <p><strong>Name:</strong> {{ matched_object.name }}</p>
-        <p><strong>Description:</strong> {{ matched_object.description }}</p>
-        <p><strong>Similarity:</strong> {{ similarity }}%</p>
-    {% else %}
-        <p>No local match found.</p>
-    {% endif %}
-
-    <h2>Matched Objects (Wikidata)</h2>
+    <h3>Matched Objects (Wikidata)</h3>
     <ul>
         {% for result in wikidata_results %}
             <li>
-                <strong>{{ result.label }}</strong> - {{ result.description }}
-                <a href="{{ result.url }}" target="_blank">View on Wikidata</a>
+                <strong>{{ result.label }}</strong>: {{ result.description }}
+                (Similarity: {{ result.similarity|floatformat:2 }}%)
             </li>
         {% endfor %}
     </ul>

@@ -3,18 +3,53 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.conf import settings
 
-class Object(models.Model):
-    material = models.CharField(max_length=100)
-    # Define other fields here
-    # e.g., size, color, etc.
-
-########### 
 
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
+
+class Object(models.Model):
+    name = models.CharField(max_length=255, default="Unnamed Object")
+    description = models.TextField(blank=True, null=True)  # Obje açıklaması
+    tags = models.ManyToManyField(Tag, blank=True)  # Etiketlerle ilişki
+
+    # Dinamik özellikler
+    material = models.CharField(max_length=100, blank=True, null=True)
+    size = models.FloatField(blank=True, null=True)
+    color = models.CharField(max_length=50, blank=True, null=True)
+    shape = models.CharField(max_length=50, blank=True, null=True)
+    weight = models.FloatField(blank=True, null=True)
+
+    # created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)  # Varsayılan olarak mevcut zaman
+    # updated_at = models.DateTimeField(auto_now=True)
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # Object nesnesini önce kaydet
+        self.add_tags()
+
+    def add_tags(self):
+        """
+        `material`, `color`, vb. alanlardan otomatik olarak tag oluşturur ve ilişkilendirir.
+        """
+        tag_fields = [self.material, self.color, self.shape]
+        for field in tag_fields:
+            if field:
+                tag, created = Tag.objects.get_or_create(name=field)
+                self.tags.add(tag)
+
+        # Boyut ve ağırlık için özel formatlı etiketler oluştur
+        if self.size:
+            tag, created = Tag.objects.get_or_create(name=f"Size: {self.size}cm")
+            self.tags.add(tag)
+        if self.weight:
+            tag, created = Tag.objects.get_or_create(name=f"Weight: {self.weight}kg")
+            self.tags.add(tag)
+
+    def __str__(self):
+       return self.name
+
+########### 
 
 class Post(models.Model):
     title = models.CharField(max_length=255)
@@ -25,6 +60,7 @@ class Post(models.Model):
     upvotes = models.IntegerField(default=0)  # Add upvotes field
     downvotes = models.IntegerField(default=0)  # Add downvotes field
     tags = models.ManyToManyField(Tag, blank=True) 
+    matched_object = models.TextField(blank=True, null=True)  # Sonuç: Tavsiye edilen nesne
     
     material = models.CharField(              # Materyal özelliği
         max_length=100, blank=True, null=True,
@@ -50,6 +86,29 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     
+    def save(self, *args, **kwargs):
+        # Post nesnesini önce kaydet
+        super().save(*args, **kwargs)
+        self.add_tags()  # Otomatik etiketleme
+
+    def add_tags(self):
+        """
+        Post'un özelliklerinden otomatik olarak etiket oluştur ve ekle.
+        """
+        tag_fields = [self.material, self.color, self.shape]
+        for field in tag_fields:
+            if field:  # Eğer alan boş değilse
+                tag, created = Tag.objects.get_or_create(name=field)
+                self.tags.add(tag)
+
+        # Boyut ve ağırlık gibi özellikleri özel formatta ekle
+        if self.size:
+            tag, created = Tag.objects.get_or_create(name=f"Size: {self.size}cm")
+            self.tags.add(tag)
+        if self.weight:
+            tag, created = Tag.objects.get_or_create(name=f"Weight: {self.weight}kg")
+            self.tags.add(tag)
+
     def __str__(self):
         return self.title
 

@@ -10,6 +10,56 @@
 <body>
     <h3>Create a New Post</h3>
 
+    <form id="post-form" method="post" enctype="multipart/form-data" action="{% url 'create_post_form' %}">
+        {% csrf_token %}
+        <div>
+            <label for="id_title">Title:</label>
+            {{ form.title }}
+        </div>
+        <div>
+            <label for="id_content">Content:</label>
+            {{ form.content }}
+        </div>
+        <div>
+            <label for="id_material">Material:</label>
+            {{ form.material }}
+        </div>
+        <div>
+            <label for="id_size">Size (cm):</label>
+            {{ form.size }}
+        </div>
+        <div>
+            <label for="id_color">Color:</label>
+            {{ form.color }}
+        </div>
+        <div>
+            <label for="id_shape">Shape:</label>
+            {{ form.shape }}
+        </div>
+        <div>
+            <label for="id_weight">Weight (kg):</label>
+            {{ form.weight }}
+        </div>
+        <div>
+            <label for="id_image">Upload Image:</label>
+            {{ form.image }}
+        </div>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
+
+{% comment %} <---------- old version ------------> {% endcomment %}
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Post</title>
+</head>
+<body>
+    <h3>Create a New Post</h3>
+
     <form id="post-form" " method="post" enctype="multipart/form-data" action="{% url 'create_post_form' %}">
         {% csrf_token %}
     <div>
@@ -50,5 +100,5 @@
     <script src="{% static 'js/main.js' %}"></script>  
 </body>
 
-</html>
+</html> {% endcomment %}
 

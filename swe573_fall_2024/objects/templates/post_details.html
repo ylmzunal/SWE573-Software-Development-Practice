@@ -22,14 +22,18 @@
         ">
         <button type="submit">Search Wikidata</button>
     </form>
-
+    <div style="margin-top: 20px;">
+        <form action="{% url 'analyze_post' post.id %}" method="GET">
+            <button type="submit">Analyze Post</button>
+        </form>
+    </div>
         <!-- NLP ile Çıkarılan Anahtar Kelimeler -->
-        <h3>Extracted Keywords:</h3>
+        {% comment %} <h3>Extracted Keywords:</h3>
         <ul>
             {% for keyword in keywords %}
                 <li>{{ keyword }}</li>
             {% endfor %}
-        </ul>
+        </ul> {% endcomment %}
     
         <!-- Anahtar Kelimelerle Wikidata Arama Butonu -->
         {% comment %} <form action="{% url 'search_results' %}" method="GET" class="wikidata-search-form">

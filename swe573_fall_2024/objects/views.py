@@ -13,8 +13,8 @@ from PIL import Image
 import logging
 import spacy
 from SPARQLWrapper import SPARQLWrapper, JSON
-from .utils import find_best_match
-from .wikidata_utils import search_wikidata_nlp
+from .utils import build_query_from_post, rank_wikidata_results
+from .wikidata_utils import search_wikidata_nlp, build_attributes_for_sparql
 
 
 logger = logging.getLogger(__name__)
@@ -296,16 +296,16 @@ def find_object_from_post(post_id):
     comments = post.comments.all()
 
     # Post ve yorum içeriklerinden anahtar kelimeleri çıkar
-    print("Post content:", post.content)
+    # print("Post content:", post.content)
     post_keywords = extract_keywords(post.content)
     
     comment_keywords = []
     for comment in comments:
-        print("Comment content:", comment.content)
+        # print("Comment content:", comment.content)
         comment_keywords.extend(extract_keywords(comment.content))
 
     all_keywords = list(set(post_keywords + comment_keywords))
-    print("All keywords extracted:", all_keywords)
+    # print("All keywords extracted:", all_keywords)
 
     # Etiketlerden anahtar kelimeleri ekle
     tag_keywords = [tag.name.lower() for tag in post.tags.all()]
@@ -420,23 +420,25 @@ def search_view(request):
 
 
 def analyze_post(request, post_id):
-    # Gönderiyi al
+    """
+    Post içeriğini analiz eden ana görünüm.
+    """
     post = get_object_or_404(Post, id=post_id)
-    objects = Object.objects.all()
 
-    # Yerel veritabanı eşleştirmesi
-    matched_object, similarity = find_best_match(post.content, objects)
+    # Post özelliklerinden SPARQL sorgusu oluştur
+    attributes = build_attributes_for_sparql(post)
 
-    # Wikidata araması
-    wikidata_results = search_wikidata_nlp(post.content, limit=5)
-
-    # Eşleşen nesneyi kaydet (yerel eşleştirme)
-    post.matched_object = matched_object
-    post.save()
-
+    # SPARQL sorgusunu çalıştır
+    wikidata_results = search_wikidata_nlp(
+        material=attributes.get("material"),
+        size=attributes.get("size"),
+        color=attributes.get("color"),
+        shape=attributes.get("shape"),
+        weight=attributes.get("weight"),
+        limit=10
+    )
+    print("logg nlp:",search_wikidata_nlp(material="Q11426", size=7, color="Q372669", shape="Q815741", weight=0))
     return render(request, 'post_analysis.html', {
         'post': post,
-        'matched_object': matched_object,
-        'similarity': round(similarity * 100, 2),
         'wikidata_results': wikidata_results,
     })

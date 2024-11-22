@@ -2,21 +2,62 @@ from django import forms
 from .models import Post, Comment, Profile
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from .utils import fetch_wikidata_options
+
+# Wikidata'dan çekilen seçenekler
+material_options = [(opt['id'], opt['label']) for opt in fetch_wikidata_options(property_id="P186", item_type="Q223557")]
+color_options = [(opt['id'], opt['label']) for opt in fetch_wikidata_options(item_type="Q1075")]  # Q1075 = Colors
+shape_options = [(opt['id'], opt['label']) for opt in fetch_wikidata_options(item_type="Q815741")]  # Q815741 = Shapes
 
 class PostForm(forms.ModelForm):
+    material = forms.ChoiceField(
+        choices=[('', 'None')] + material_options,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    color = forms.ChoiceField(
+        choices=[('', 'None')] + color_options,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    shape = forms.ChoiceField(
+        choices=[('', 'None')] + shape_options,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    size = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={'placeholder': 'Size (cm)', 'class': 'form-control'})
+    )
+    weight = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={'placeholder': 'Weight (kg)', 'class': 'form-control'})
+    )
+
     class Meta:
         model = Post
-        exclude = ['author']
-        fields = ['title', 'content', 'material', 'size', 'color', 'shape', 'weight', 'image']  # Formda kullanılacak alanlar
+        fields = ['title', 'content', 'material', 'size', 'color', 'shape', 'weight', 'image']
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': 'Post Başlığı'}),
             'content': forms.Textarea(attrs={'placeholder': 'Post İçeriği'}),
-            'material': forms.TextInput(attrs={'placeholder': 'Materyal'}),
-            'size': forms.NumberInput(attrs={'placeholder': 'Boyut (cm)'}),
-            'color': forms.TextInput(attrs={'placeholder': 'Renk'}),
-            'shape': forms.TextInput(attrs={'placeholder': 'Şekil'}),
-            'weight': forms.NumberInput(attrs={'placeholder': 'Ağırlık (kg)'}),
         }
+
+
+        
+# class PostForm(forms.ModelForm):
+#     class Meta:
+#         model = Post
+#         exclude = ['author']
+#         fields = ['title', 'content', 'material', 'size', 'color', 'shape', 'weight', 'image']  # Formda kullanılacak alanlar
+#         widgets = {
+#             'title': forms.TextInput(attrs={'placeholder': 'Post Başlığı'}),
+#             'content': forms.Textarea(attrs={'placeholder': 'Post İçeriği'}),
+#             'material': forms.TextInput(attrs={'placeholder': 'Materyal'}),
+#             'size': forms.NumberInput(attrs={'placeholder': 'Boyut (cm)'}),
+#             'color': forms.TextInput(attrs={'placeholder': 'Renk'}),
+#             'shape': forms.TextInput(attrs={'placeholder': 'Şekil'}),
+#             'weight': forms.NumberInput(attrs={'placeholder': 'Ağırlık (kg)'}),
+#         }
 
 
 
