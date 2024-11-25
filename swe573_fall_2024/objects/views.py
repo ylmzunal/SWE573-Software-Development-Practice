@@ -13,8 +13,8 @@ from PIL import Image
 import logging
 import spacy
 from SPARQLWrapper import SPARQLWrapper, JSON
-from .utils import build_query_from_post, rank_wikidata_results
-from .wikidata_utils import search_wikidata_nlp, build_attributes_for_sparql
+# from .utils import build_query_from_post, rank_wikidata_results
+# from .wikidata_utils import search_wikidata_nlp, build_attributes_for_sparql
 
 
 logger = logging.getLogger(__name__)
@@ -419,26 +419,26 @@ def search_view(request):
     return render(request, 'search_results.html', context)
 
 
-def analyze_post(request, post_id):
-    """
-    Post içeriğini analiz eden ana görünüm.
-    """
-    post = get_object_or_404(Post, id=post_id)
+# def analyze_post(request, post_id):
+#     """
+#     Post içeriğini analiz eden ana görünüm.
+#     """
+#     post = get_object_or_404(Post, id=post_id)
 
-    # Post özelliklerinden SPARQL sorgusu oluştur
-    attributes = build_attributes_for_sparql(post)
+#     # Post özelliklerinden SPARQL sorgusu oluştur
+#     attributes = build_attributes_for_sparql(post)
 
-    # SPARQL sorgusunu çalıştır
-    wikidata_results = search_wikidata_nlp(
-        material=attributes.get("material"),
-        size=attributes.get("size"),
-        color=attributes.get("color"),
-        shape=attributes.get("shape"),
-        weight=attributes.get("weight"),
-        limit=10
-    )
-    print("logg nlp:",search_wikidata_nlp(material="Q11426", size=7, color="Q372669", shape="Q815741", weight=0))
-    return render(request, 'post_analysis.html', {
-        'post': post,
-        'wikidata_results': wikidata_results,
-    })
+#     # SPARQL sorgusunu çalıştır
+#     wikidata_results = search_wikidata_nlp(
+#         material=attributes.get("material"),
+#         size=attributes.get("size"),
+#         color=attributes.get("color"),
+#         shape=attributes.get("shape"),
+#         weight=attributes.get("weight"),
+#         limit=10
+#     )
+#     print("logg nlp:",search_wikidata_nlp(material="Q11426", size=7, color="Q372669", shape="Q815741", weight=0))
+#     return render(request, 'post_analysis.html', {
+#         'post': post,
+#         'wikidata_results': wikidata_results,
+#     })

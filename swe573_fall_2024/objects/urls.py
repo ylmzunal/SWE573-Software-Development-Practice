@@ -23,7 +23,7 @@ urlpatterns = [
     path('vote/<str:type>/<int:id>/<str:vote_type>/', views.vote, name='vote'),
     path('vote-comment/<int:comment_id>/<str:action>/', vote_comment, name='vote_comment'),
     path('post/<int:post_id>/mark-as-solved/', views.mark_as_solved, name='mark_as_solved'),
-    path('post/<int:post_id>/analyze/', views.analyze_post, name='analyze_post'),
+    # path('post/<int:post_id>/analyze/', views.analyze_post, name='analyze_post'),
 ]
 
 
