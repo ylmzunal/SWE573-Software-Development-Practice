@@ -86,11 +86,11 @@
                 <!-- Oy verme butonları -->
                 <div class="comment-votes">
                     <button class="vote-btn" onclick="voteComment({{ comment.id }}, 'upvote')">
-                        &#x25B2; <!-- Yukarı ok -->
+                        &#x25B2; <!-- Up -->
                     </button>
                     <span id="comment-upvotes-{{ comment.id }}">{{ comment.upvotes }}</span>
                     <button class="vote-btn" onclick="voteComment({{ comment.id }}, 'downvote')">
-                        &#x25BC; <!-- Aşağı ok -->
+                        &#x25BC; <!-- Down -->
                     </button>
                     <span id="comment-downvotes-{{ comment.id }}">{{ comment.downvotes }}</span>
                 </div>
@@ -108,104 +108,4 @@
     </form>
     {% endif %}
 </div>
-
-<script>
-    document.getElementById('comment-form').addEventListener('submit', function (event) {
-        event.preventDefault();
-    
-        const formData = new FormData(this);
-    
-        fetch(this.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            },
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const commentsSection = document.getElementById('comments');
-                commentsSection.insertAdjacentHTML('beforeend', `
-                    <div class="comment">
-                        <p>${data.comment.content}</p>
-                        <small>By ${data.comment.author} | ${data.comment.created_at}</small>
-                    </div>
-                `);
-                this.reset();  // Formu sıfırla
-            } else {
-                alert('Error adding comment.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    });
-</script>
-
-<script>
-    function voteComment(commentId, voteType) {
-        fetch('/vote-comment/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            },
-            body: JSON.stringify({ comment_id: commentId, vote_type: voteType }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Güncellenen oylama sayısını UI'ye yansıt
-                document.getElementById(`comment-upvotes-${commentId}`).textContent = data.upvotes;
-                document.getElementById(`comment-downvotes-${commentId}`).textContent = data.downvotes;
-            } else {
-                alert('Oylama sırasında bir hata oluştu: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Hata:', error);
-            alert('Beklenmeyen bir hata oluştu.');
-        });
-    }
-</script>
- 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const markSolvedBtn = document.getElementById('mark-solved-btn');
-        const markSolvedSection = document.getElementById('mark-solved-section');
-        const commentFormContainer = document.getElementById('comment-form-container');
-    
-        if (markSolvedBtn) {
-            markSolvedBtn.addEventListener('click', function () {
-                const postId = markSolvedBtn.dataset.postId;
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-                fetch(`/post/${postId}/mark-as-solved/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken,
-                        'Content-Type': 'application/json',
-                    },
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.solved) {
-                            // UI Güncelle
-                            markSolvedSection.innerHTML = '<p><strong>This post has been marked as solved.</strong></p>';
-                            if (commentFormContainer) {
-                                commentFormContainer.innerHTML = ''; // Yorum formunu kaldır
-                            }
-                        } else {
-                            alert('Failed to mark as solved: ' + (data.error || 'Unknown error.'));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('An unexpected error occurred.');
-                    });
-            });
-        }
-    });
-</script>
 

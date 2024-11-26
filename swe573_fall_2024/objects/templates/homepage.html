@@ -3,7 +3,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Object Finder</title>
@@ -14,7 +13,7 @@
         <div class="nav">
             {% if user.is_authenticated %}
             <button id="create-post-btn" class="action-btn">Create New Post</button>
-        {% endif %}
+            {% endif %}
             {% if user.is_authenticated %}
                 <form method="post" action="{% url 'logout' %}" style="display: inline;">
                     {% csrf_token %}
@@ -22,8 +21,8 @@
                 </form>
                 <a href="{% url 'profile' user.username %}" class="nav-link">{{ user.username }}</a>
             {% else %}
-            <a href="{% url 'login' %}" class="btn nav-link">Login</a>
-            <a href="{% url 'register' %}" class="btn nav-link">Register</a>
+                <a href="{% url 'login' %}" class="btn nav-link">Login</a>
+                <a href="{% url 'register' %}" class="btn nav-link">Register</a>
             {% endif %}
         </div>
         <!-- Wikidata Search Bar -->
@@ -41,7 +40,7 @@
             <h2>Questions</h2>
             <div id="post-list">
                 {% for post in posts %}
-                    <div class="post" onclick="loadPostDetails({{ post.id }})">
+                    <div class="post" id="post-{{ post.id }}" onclick="loadPostDetails({{ post.id }})">
                         <h3>{{ post.title }}</h3>
                         <p>{{ post.content|truncatechars:100 }}</p>
                         {% if post.image %}
@@ -66,64 +65,11 @@
     </main>
 
     {% if user.is_authenticated %}
-        <button id="create-post-btn" class="action-btn" >Create New Post</button>
+    <button id="create-post-btn" class="action-btn">Create New Post</button>
     {% endif %}
 
     <script>
-        document.getElementById('create-post-btn').addEventListener('click', function () {
-            fetch('/create-post-form/')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('main-content').innerHTML = html;
-        
-                    // Formu dinle
-                    const postForm = document.getElementById('post-form');
-                    postForm.addEventListener('submit', async function (event) {
-                        event.preventDefault();
-        
-                        const formData = new FormData(postForm);
-                        const response = await fetch('/create-post/', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                            },
-                            body: formData,
-                        });
-        
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.success) {
-                                // Yeni postu sol listeye ekle
-                                const postList = document.getElementById('post-list');
-                                const newPostHTML = `
-                                    <div class="post" id="post-${data.post.id}">
-                                        <h3>${data.post.title}</h3>
-                                        <p>${data.post.content}</p>
-                                        ${data.post.image_url ? `<img src="${data.post.image_url}" alt="Post Image" style="width: 100%; max-width: 800px; height: auto;">` : ''}
-                                        <small>By ${data.post.author}</small>
-                                    </div>
-                                `;
-                                postList.insertAdjacentHTML('afterbegin', newPostHTML);
-        
-                                // Yeni post'a tıklama olayını bağla
-                                const newPostElement = document.getElementById(`post-${data.post.id}`);
-                                newPostElement.addEventListener('click', function () {
-                                    loadPostDetails(data.post.id);
-                                });
-        
-                                // Yeni post'a tıklama simüle et
-                                newPostElement.click();
-                            } else {
-                                alert('Error: ' + JSON.stringify(data.errors));
-                            }
-                        } else {
-                            alert('Unexpected error occurred.');
-                        }
-                    });
-                });
-        });
-        
-        // Post detaylarını yükleme fonksiyonu
+        // Function to load post details into the main-content section
         function loadPostDetails(postId) {
             fetch(`/post-details/${postId}/`)
                 .then(response => response.text())
@@ -135,8 +81,132 @@
                     alert('Unable to load post details.');
                 });
         }
-    </script>
-    
 
+        // Function to attach the comment form handler after refreshing
+    function attachCommentHandler(postId) {
+        const commentForm = document.getElementById('comment-form');
+        if (commentForm) {
+            commentForm.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                // Repeat the same logic for comment submission
+            });
+        }
+    }
+    
+        // Handle comment submission
+        // Dynamically handle comment submission
+       // Yorum formunu dinle
+       document.getElementById('comment-form').addEventListener('submit', function (event) {
+        event.preventDefault(); // Sayfanın yeniden yüklenmesini engelle
+    
+        const postId = this.action.split('/').slice(-2, -1)[0]; // URL'den post ID'yi al
+        const formData = new FormData(this);
+    
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: formData,
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const targetPost = document.getElementById(`post-${postId}`);
+                    if (targetPost) {
+                        targetPost.click(); // Sidebar'daki ilgili posta tıklama simüle edilir
+                    }
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to add comment.'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Unexpected error occurred.');
+            });
+    });
+
+
+        // Handle "Mark as Solved" functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const markSolvedBtn = document.getElementById('mark-solved-btn');
+            if (markSolvedBtn) {
+                markSolvedBtn.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const postId = markSolvedBtn.dataset.postId;
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+                    fetch(`/post/${postId}/mark-as-solved/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Simulate click on the relevant post in the sidebar
+                                const targetPost = document.getElementById(`post-${postId}`);
+                                if (targetPost) {
+                                    targetPost.click(); // Simulate the click
+                                }
+                            } else {
+                                alert('Failed to mark as solved.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                });
+            }
+        });
+    
+        // Functionality for creating a new post
+        document.getElementById('create-post-btn').addEventListener('click', function () {
+            fetch('/create-post-form/')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('main-content').innerHTML = html;
+    
+                    // Handle form submission
+                    const postForm = document.getElementById('post-form');
+                    postForm.addEventListener('submit', async function (event) {
+                        event.preventDefault();
+                        const formData = new FormData(postForm);
+                        const response = await fetch('/create-post/', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            },
+                            body: formData,
+                        });
+    
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.success) {
+                                const postList = document.getElementById('post-list');
+                                const newPostHTML = `
+                                    <div class="post" id="post-${data.post.id}" onclick="loadPostDetails(${data.post.id})">
+                                        <h3>${data.post.title}</h3>
+                                        <p>${data.post.content}</p>
+                                        ${data.post.image_url ? `<img src="${data.post.image_url}" alt="Post Image" style="width: 100%; max-width: 800px; height: auto;">` : ''}
+                                        <small>By ${data.post.author}</small>
+                                    </div>
+                                `;
+                                postList.insertAdjacentHTML('afterbegin', newPostHTML);
+    
+                                // Simulate click to show the new post details
+                                document.getElementById(`post-${data.post.id}`).click();
+                            } else {
+                                alert('Error: ' + JSON.stringify(data.errors));
+                            }
+                        } else {
+                            alert('Unexpected error occurred.');
+                        }
+                    });
+                });
+        });
+    </script>
 </body>
 </html>

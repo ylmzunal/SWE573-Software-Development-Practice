@@ -139,27 +139,26 @@ def post_details(request, post_id):
 def add_comment(request, post_id):
     if request.method == 'POST':
         post = get_object_or_404(Post, id=post_id)
-
-        if post.solved:
-            return JsonResponse({'success': False, 'message': 'Comments are disabled for this post as it is marked as solved.'}, status=403)
-
         content = request.POST.get('content', '').strip()
-        if content:
-            comment = Comment.objects.create(
-                post=post,
-                user=request.user if request.user.is_authenticated else None,
-                content=content
-            )
-            return JsonResponse({
-                'success': True,
-                'comment': {
-                    'content': comment.content,
-                    'author': comment.user.username if comment.user else 'Anonymous',
-                    'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                }
-            })
-        return JsonResponse({'success': False, 'message': 'Comment content cannot be empty.'}, status=400)
-    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=400)
+
+        if not content:
+            return JsonResponse({'success': False, 'message': 'Yorum içeriği boş olamaz.'}, status=400)
+
+        comment = Comment.objects.create(
+            post=post,
+            user=request.user if request.user.is_authenticated else None,
+            content=content
+        )
+        return JsonResponse({
+            'success': True,
+            'comment': {
+                'content': comment.content,
+                'author': comment.user.username if comment.user else 'Anonymous',
+                'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            }
+        })
+
+    return JsonResponse({'success': False, 'message': 'Geçersiz istek yöntemi.'}, status=405)
 
 
 
