@@ -90,26 +90,39 @@ def create_post_form(request):
     return render(request, 'post_form.html', {'form': form})
 
 @login_required
-def create_post_ajax(request):
-    if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES)  # Form verilerini ve dosyaları alın
+def create_post(request):
+    if request.method == "POST":
+        form = PostForm(request.POST, request.FILES)
         if form.is_valid():
             post = form.save(commit=False)
-            post.author = request.user  # Mevcut kullanıcıyı yazara bağla
+            post.author = request.user
             post.save()
+            # Post oluşturulduktan sonra detay sayfasına yönlendirme
+            return redirect('post_details', post_id=post.id)
+    else:
+        form = PostForm()
+    return render(request, 'post_form.html', {'form': form})
 
-            # JSON yanıtında image_url bilgisi gönderin
-            return JsonResponse({
-                'success': True,
-                'post': {
-                    'id': post.id,
-                    'title': post.title,
-                    'content': post.content,
-                    'author': post.author.username,
-                    'image_url': post.image.url if post.image else None,  # Resim URL'si
-                }
-            })
-        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+# def create_post_ajax(request):
+#     if request.method == 'POST':
+#         form = PostForm(request.POST, request.FILES)  # Form verilerini ve dosyaları alın
+#         if form.is_valid():
+#             post = form.save(commit=False)
+#             post.author = request.user  # Mevcut kullanıcıyı yazara bağla
+#             post.save()
+
+#             # JSON yanıtında image_url bilgisi gönderin
+#             return JsonResponse({
+#                 'success': True,
+#                 'post': {
+#                     'id': post.id,
+#                     'title': post.title,
+#                     'content': post.content,
+#                     'author': post.author.username,
+#                     'image_url': post.image.url if post.image else None,  # Resim URL'si
+#                 }
+#             })
+#         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 def post_list_ajax(request):
     posts = Post.objects.all()
@@ -136,33 +149,28 @@ def post_details(request, post_id):
     })
 
 
+
 def add_comment(request, post_id):
-    if request.method == 'POST':
+    if request.method == "POST":
         post = get_object_or_404(Post, id=post_id)
-        content = request.POST.get('content', '').strip()
-
-        if not content:
-            return render(request, 'partials/comments.html', {
-                'post': post,
-                'comments': post.comments.order_by('created_at'),
-                'error': 'Comment content cannot be empty.'
-            }, status=400)
-
-        comment = Comment.objects.create(
-            post=post,
-            user=request.user if request.user.is_authenticated else None,
-            content=content
-        )
-
-        return render(request, 'partials/comments.html', {
-            'post': post,
-            'comments': post.comments.order_by('created_at')
-        })
-
-    return render(request, 'partials/comments.html', {
-        'error': 'Invalid request method.'
-    }, status=405)
-
+        content = request.POST.get("content")
+        if content:
+            Comment.objects.create(post=post, content=content, user=request.user)
+        # Yorum eklendikten sonra detay sayfasına yönlendir
+        return redirect('post_detail', post_id=post.id)
+    
+# def add_comment(request, post_id):
+#     if request.method == "POST":
+#         post = get_object_or_404(Post, id=post_id)
+#         content = request.POST.get("content")
+#         if content:
+#             # Yeni yorum oluştur
+#             comment = Comment.objects.create(post=post, content=content, user=request.user)
+#             # Yeni yorumları render et
+#             comments_html = render(request, 'partials/comments.html', {'comments': post.comments.all()}).content.decode('utf-8')
+#             return JsonResponse({"success": True, "html": comments_html})
+#         return JsonResponse({"success": False, "message": "Comment content cannot be empty."})
+#     return JsonResponse({"success": False, "message": "Invalid request."})
 
 
 @csrf_exempt

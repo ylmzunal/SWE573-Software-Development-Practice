@@ -1,4 +1,7 @@
 {% load static %}
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'objects/css/post_details.css' %}">
 
 <div id="post-details">
     <h2>{{ post.title }}</h2>
@@ -122,31 +125,36 @@
 
 
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const commentForm = document.getElementById('comment-form');
-    const commentsSection = document.getElementById('comments-section');
-
-    commentForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-        const formData = new FormData(event.target);
-
-        fetch(event.target.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            }
-        })
-        .then(response => response.text())
-        .then(data => {
-            commentsSection.innerHTML = data;
-            event.target.reset();
-        })
-        .catch(error => {
-            console.error('Error adding comment:', error);
-            alert('An error occurred while adding the comment. Please try again.');
+{% comment %} <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const commentForm = document.getElementById('comment-form');
+        const commentsSection = document.getElementById('comments-section');
+    
+        commentForm.addEventListener('submit', function (event) {
+            event.preventDefault(); // Sayfa yenilemeyi durdur
+    
+            const formData = new FormData(commentForm);
+    
+            fetch(commentForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Yorumları güncelle
+                    commentsSection.innerHTML = data.html;
+                    commentForm.reset(); // Formu sıfırla
+                } else {
+                    alert(data.message || "An error occurred.");
+                }
+            })
+            .catch(error => {
+                console.error('Error adding comment:', error);
+            });
         });
     });
-});
-</script>
+</script> {% endcomment %}

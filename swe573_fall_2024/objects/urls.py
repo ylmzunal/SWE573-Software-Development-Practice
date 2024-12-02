@@ -16,13 +16,15 @@ urlpatterns = [
     #path('search-results/<int:post_id>/', views.search_view, name='search_results'),
     path('create-post-form/', views.create_post_form, name='create_post_form'),
     path('post-list-ajax/', views.post_list_ajax, name='post_list_ajax'),
-    path('create-post/', views.create_post_ajax, name='create_post_form'),
+    # path('create-post/', views.create_post_ajax, name='create_post_form'),
+    path('create-post/', views.create_post, name='create_post'),
     # path('create-post-ajax/', views.create_post_ajax, name='create_post_ajax'),
     path('post-details/<int:post_id>/', views.post_details, name='post_details'),
     path('add-comment/<int:post_id>/', views.add_comment, name='add_comment'),
-    path('vote/<str:type>/<int:id>/<str:vote_type>/', views.vote, name='vote'),
+    # path('vote/<str:type>/<int:id>/<str:vote_type>/', views.vote, name='vote'),
     path('vote-comment/<int:comment_id>/<str:action>/', vote_comment, name='vote_comment'),
     path('post/<int:post_id>/mark-as-solved/', views.mark_as_solved, name='mark_as_solved'),
+    path('post/<int:post_id>/', views.post_details, name='post_detail'),
     # path('post/<int:post_id>/analyze/', views.analyze_post, name='analyze_post'),
 ]
 

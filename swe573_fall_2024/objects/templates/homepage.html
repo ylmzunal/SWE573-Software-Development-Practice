@@ -68,7 +68,96 @@
     <button id="create-post-btn" class="action-btn">Create New Post</button>
     {% endif %}
 
+
     <script>
+        // Function to handle errors gracefully
+        function handleFetchError(error, message = 'An error occurred') {
+            console.error(message, error);
+            alert(message);
+        }
+    
+        // Function to load post details into the main-content section
+        function loadPostDetails(postId) {
+            fetch(`/post-details/${postId}/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Failed to load post details. Status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    document.getElementById('main-content').innerHTML = html;
+                })
+                .catch(error => handleFetchError(error, 'Unable to load post details.'));
+        }
+    
+        // Function to handle new post creation
+        document.getElementById('create-post-btn').addEventListener('click', function() {
+            fetch('/create-post-form/')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Failed to load post form. Status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    document.getElementById('main-content').innerHTML = html;
+    
+                    const postForm = document.getElementById('post-form');
+                    postForm.addEventListener('submit', async function(event) {
+                        event.preventDefault();
+                        const formData = new FormData(postForm);
+    
+                        try {
+                            const response = await fetch('/create-post/', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                },
+                                body: formData,
+                            });
+    
+                            if (!response.ok) {
+                                throw new Error(`Failed to create post. Status: ${response.status}`);
+                            }
+    
+                            // Assuming backend redirects to the post detail page
+                            if (response.redirected) {
+                                window.location.href = response.url;
+                            } else {
+                                const data = await response.json();
+                                if (data.success) {
+                                    updateSidebarWithNewPost(data.post);
+                                    loadPostDetails(data.post.id);
+                                } else {
+                                    alert('Error: ' + JSON.stringify(data.errors));
+                                }
+                            }
+                        } catch (error) {
+                            handleFetchError(error, 'Unexpected error occurred while creating post.');
+                        }
+                    });
+                })
+                .catch(error => handleFetchError(error, 'Unable to load post creation form.'));
+        });
+    
+        // Helper function to update sidebar with a new post
+        function updateSidebarWithNewPost(post) {
+            const postList = document.getElementById('post-list');
+            const newPostHTML = `
+                <div class="post" id="post-${post.id}" onclick="loadPostDetails(${post.id})">
+                    <h3>${post.title}</h3>
+                    <p>${post.content}</p>
+                    ${post.image_url ? `<img src="${post.image_url}" alt="Post Image">` : ''}
+                    <small>By ${post.author || 'Anonymous'}</small>
+                </div>
+            `;
+            postList.insertAdjacentHTML('afterbegin', newPostHTML);
+        }
+    </script>
+
+
+    {% comment %} <script>
         // Function to load post details into the main-content section
         function loadPostDetails(postId) {
             fetch(`/post-details/${postId}/`)
@@ -82,96 +171,16 @@
                 });
         }
 
-        // Function to attach the comment form handler after refreshing
-    function attachCommentHandler(postId) {
-        const commentForm = document.getElementById('comment-form');
-        if (commentForm) {
-            commentForm.addEventListener('submit', async function (event) {
-                event.preventDefault();
-                // Repeat the same logic for comment submission
-            });
-        }
-    }
-    
-        // Handle comment submission
-        // Dynamically handle comment submission
-       // Yorum formunu dinle
-       document.getElementById('comment-form').addEventListener('submit', function (event) {
-        event.preventDefault(); // Sayfanın yeniden yüklenmesini engelle
-    
-        const postId = this.action.split('/').slice(-2, -1)[0]; // URL'den post ID'yi al
-        const formData = new FormData(this);
-    
-        fetch(this.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            },
-            body: formData,
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const targetPost = document.getElementById(`post-${postId}`);
-                    if (targetPost) {
-                        targetPost.click(); // Sidebar'daki ilgili posta tıklama simüle edilir
-                    }
-                } else {
-                    alert('Error: ' + (data.message || 'Failed to add comment.'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Unexpected error occurred.');
-            });
-    });
-
-
-        // Handle "Mark as Solved" functionality
-        document.addEventListener('DOMContentLoaded', function () {
-            const markSolvedBtn = document.getElementById('mark-solved-btn');
-            if (markSolvedBtn) {
-                markSolvedBtn.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    const postId = markSolvedBtn.dataset.postId;
-                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-                    fetch(`/post/${postId}/mark-as-solved/`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': csrfToken,
-                            'Content-Type': 'application/json',
-                        },
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                // Simulate click on the relevant post in the sidebar
-                                const targetPost = document.getElementById(`post-${postId}`);
-                                if (targetPost) {
-                                    targetPost.click(); // Simulate the click
-                                }
-                            } else {
-                                alert('Failed to mark as solved.');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                        });
-                });
-            }
-        });
     
         // Functionality for creating a new post
-        document.getElementById('create-post-btn').addEventListener('click', function () {
+        document.getElementById('create-post-btn').addEventListener('click', function() {
             fetch('/create-post-form/')
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('main-content').innerHTML = html;
-    
-                    // Handle form submission
+        
                     const postForm = document.getElementById('post-form');
-                    postForm.addEventListener('submit', async function (event) {
+                    postForm.addEventListener('submit', async function(event) {
                         event.preventDefault();
                         const formData = new FormData(postForm);
                         const response = await fetch('/create-post/', {
@@ -181,7 +190,7 @@
                             },
                             body: formData,
                         });
-    
+        
                         if (response.ok) {
                             const data = await response.json();
                             if (data.success) {
@@ -190,13 +199,11 @@
                                     <div class="post" id="post-${data.post.id}" onclick="loadPostDetails(${data.post.id})">
                                         <h3>${data.post.title}</h3>
                                         <p>${data.post.content}</p>
-                                        ${data.post.image_url ? `<img src="${data.post.image_url}" alt="Post Image" style="width: 100%; max-width: 800px; height: auto;">` : ''}
-                                        <small>By ${data.post.author}</small>
+                                        ${data.post.image_url ? `<img src="${data.post.image_url}" alt="Post Image">` : ''}
+                                        <small>By ${data.post.author || 'Anonymous'}</small>
                                     </div>
                                 `;
                                 postList.insertAdjacentHTML('afterbegin', newPostHTML);
-    
-                                // Simulate click to show the new post details
                                 document.getElementById(`post-${data.post.id}`).click();
                             } else {
                                 alert('Error: ' + JSON.stringify(data.errors));
@@ -207,6 +214,6 @@
                     });
                 });
         });
-    </script>
+    </script> {% endcomment %}
 </body>
 </html>
