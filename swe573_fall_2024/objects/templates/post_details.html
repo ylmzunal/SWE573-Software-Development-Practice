@@ -74,7 +74,18 @@
         <span id="post-downvotes-{{ post.id }}">{{ post.downvotes }}</span>
     </div> {% endcomment %}
 
+
     <div id="comments-section">
+        {% include 'partials/comments.html' with post=post comments=comments %}
+    </div>
+
+    {% comment %} <form id="comment-form" method="post" action="{% url 'add_comment' post.id %}">
+        {% csrf_token %}
+        <input type="text" name="content" placeholder="Add a comment" required>
+        <button type="submit">Submit</button>
+    </form> {% endcomment %}
+
+    {% comment %} <div id="comments-section">
         <h3>Answers</h3>
         {% for comment in comments %}
             <div class="comment">
@@ -98,7 +109,7 @@
         {% empty %}
             <p>No answers yet. Be the first to answer!</p>
         {% endfor %}
-    </div>
+    </div> {% endcomment %}
 
     {% if not post.solved %}
     <form id="comment-form" method="POST" action="{% url 'add_comment' post.id %}">
@@ -109,3 +120,33 @@
     {% endif %}
 </div>
 
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const commentForm = document.getElementById('comment-form');
+    const commentsSection = document.getElementById('comments-section');
+
+    commentForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+
+        fetch(event.target.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.text())
+        .then(data => {
+            commentsSection.innerHTML = data;
+            event.target.reset();
+        })
+        .catch(error => {
+            console.error('Error adding comment:', error);
+            alert('An error occurred while adding the comment. Please try again.');
+        });
+    });
+});
+</script>

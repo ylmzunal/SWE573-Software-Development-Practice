@@ -142,23 +142,26 @@ def add_comment(request, post_id):
         content = request.POST.get('content', '').strip()
 
         if not content:
-            return JsonResponse({'success': False, 'message': 'Yorum içeriği boş olamaz.'}, status=400)
+            return render(request, 'partials/comments.html', {
+                'post': post,
+                'comments': post.comments.order_by('created_at'),
+                'error': 'Comment content cannot be empty.'
+            }, status=400)
 
         comment = Comment.objects.create(
             post=post,
             user=request.user if request.user.is_authenticated else None,
             content=content
         )
-        return JsonResponse({
-            'success': True,
-            'comment': {
-                'content': comment.content,
-                'author': comment.user.username if comment.user else 'Anonymous',
-                'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            }
+
+        return render(request, 'partials/comments.html', {
+            'post': post,
+            'comments': post.comments.order_by('created_at')
         })
 
-    return JsonResponse({'success': False, 'message': 'Geçersiz istek yöntemi.'}, status=405)
+    return render(request, 'partials/comments.html', {
+        'error': 'Invalid request method.'
+    }, status=405)
 
 
 
