@@ -10,10 +10,13 @@
 </head>
 <body class="post-details-page">
     <!-- Header -->
+    {% if not is_homepage %}
     <header>
         <a href="{% url 'homepage' %}">Home</a>
         <h1>Post Details</h1>
     </header>
+    {% endif %}
+
 
     <!-- Ana İçerik -->
     <div class="container">
@@ -44,21 +47,49 @@
                 <div id="comments-section">
                     <h3>Comments</h3>
                     {% for comment in comments %}
-                    <div class="comment">
-                        <p>{{ comment.content }}</p>
-                        <small>Author: {{ comment.user.username|default:"Anonymous" }} | {{ comment.created_at }}</small>
+                    <div class="comment" id="comment-{{ comment.id }}">
+                        {{ comment.content }}
+                        <small>
+                            Author: {{ comment.user.username|default:"Anonymous" }} | 
+                            {{ comment.created_at }}
+                        </small>
+                        
+                        <div class="vote-buttons">
+                            {% if user.is_authenticated %}
+                                <!-- Voting buttons for authenticated users -->
+                                <button onclick="handleVote({{ comment.id }}, 'upvote')" class="vote-btn">
+                                    <span>👍</span>
+                                    <span id="upvotes-{{ comment.id }}">{{ comment.upvotes|default:0 }}</span>
+                                </button>
+                                <button onclick="handleVote({{ comment.id }}, 'downvote')" class="vote-btn">
+                                    <span>👎</span>
+                                    <span id="downvotes-{{ comment.id }}">{{ comment.downvotes|default:0 }}</span>
+                                </button>
+                            {% else %}
+                                <!-- Read-only vote display for non-authenticated users -->
+                                <div class="vote-display">
+                                    <span>👍 {{ comment.upvotes|default:0 }}</span>
+                                    <span>👎 {{ comment.downvotes|default:0 }}</span>
+                                    <small>(Login to vote)</small>
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
-                    {% empty %}
-                    <p>No comments yet. Be the first to comment!</p>
-                    {% endfor %}
+                {% endfor %}
                 </div>
 
                 <!-- Yorum Ekleme Formu -->
+                {% if not post.solved %}
                 <form id="comment-form" method="POST" action="{% url 'add_comment' post.id %}">
                     {% csrf_token %}
                     <textarea name="content" placeholder="Add your comment here..." required></textarea>
                     <button type="submit">Submit</button>
                 </form>
+                {% else %}
+                <div class="comments-closed">
+                    <p>Comments are closed because this post has been marked as solved.</p>
+                </div>
+            {% endif %}
             </div>
 
             <!-- Properties Bilgileri -->
@@ -78,86 +109,37 @@
 </html>
 
 
-{% comment %} {% load static %}
-
-<link rel="stylesheet" href="{% static 'objects/css/post_details.css' %}">
-
-<div id="post-details">
-    <h2>{{ post.title }}</h2>
-    <p>{{ post.content }}</p>
-    <h2>Properties</h2>
-    <ul>
-        <li><strong>Material:</strong> {{ post.material }}</li>
-        <li><strong>Size (cm):</strong> {{ post.size }}</li>
-        <li><strong>Color:</strong> {{ post.color }}</li>
-        <li><strong>Shape:</strong> {{ post.shape }}</li>
-        <li><strong>Weight (gr):</strong> {{ post.weight }}</li>
-    </ul>
-
-    <form action="{% url 'search_results' %}" method="GET">
-        <input type="hidden" name="q" value="
-            {% if post.material %}{{ post.material }} {% endif %}
-            {% if post.size %}{{ post.size }}cm {% endif %}
-            {% if post.color %}{{ post.color }} {% endif %}
-            {% if post.shape %}{{ post.shape }} {% endif %}
-            {% if post.weight %}{{ post.weight }}kg{% endif %}
-        ">
-        <button type="submit">Search Wikidata</button>
-    </form> {% endcomment %}
-
-    {% comment %} <div style="margin-top: 20px;">
-        <form action="{% url 'analyze_post' post.id %}" method="GET">
-            <button type="submit">Analyze Post</button>
-        </form>
-    </div> {% endcomment %}
-        <!-- NLP ile Çıkarılan Anahtar Kelimeler -->
-        {% comment %} <h3>Extracted Keywords:</h3>
-        <ul>
-            {% for keyword in keywords %}
-                <li>{{ keyword }}</li>
-            {% endfor %}
-        </ul> {% endcomment %}
-    
-        <!-- Anahtar Kelimelerle Wikidata Arama Butonu -->
-        {% comment %} <form action="{% url 'search_results' %}" method="GET" class="wikidata-search-form">
-            <input type="hidden" name="q" value="{% for keyword in keywords %}{{ keyword }} {% endfor %}">
-            <button type="submit" class="btn btn-primary">Search Wikidata</button>
-        </form> {% endcomment %}
-
-    {% comment %} <div class="post-image-container" style="text-align: center;">
-        {% if post.image %}
-        <img src="{{ post.image.url }}" alt="{{ post.title }}" style="width: 100%; max-width: 800px; height: auto;">
-        {% endif %}
-    </div>
-    <small>
-        Author: {{ post.author.username }}
-    </small>
-    <small> | {{ post.created_at }} | </small>
-    <small> {% if user.is_authenticated %} | 
-        Answers: {{ post.comments.count }}
-        {% endif %} </small>
-
-        {% if can_mark_as_solved %}
-        <form method="POST" action="{% url 'mark_as_solved' post.id %}">
-            {% csrf_token %}
-            <button type="submit">Mark as Solved</button>
-        </form>
-    {% elif post.solved %}
-        <p><strong>This post has been marked as solved.</strong></p>
-    {% endif %}
-
-    <div id="comments-section">
-        {% include 'partials/comments.html' with post=post comments=comments %}
-    </div>
-
-   
-
-    {% if not post.solved %}
-    <form id="comment-form" method="POST" action="{% url 'add_comment' post.id %}">
-        {% csrf_token %}
-        <textarea name="content" placeholder="Add your comment here..." required></textarea>
-        <button type="submit">Submit</button>
-    </form>
-    {% endif %}
-</div> {% endcomment %}
-
+<script>
+    function handleVote(commentId, voteType) {
+        // Get CSRF token from cookie
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch(`/comment/${commentId}/vote/${voteType}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Response not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Update vote counts
+                document.getElementById(`upvotes-${commentId}`).textContent = data.upvotes;
+                document.getElementById(`downvotes-${commentId}`).textContent = data.downvotes;
+            } else {
+                alert(data.message || 'Error voting');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error voting. Please try again.');
+        });
+    }
+</script>

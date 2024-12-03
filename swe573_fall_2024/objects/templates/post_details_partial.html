@@ -1,0 +1,56 @@
+{% load static %}
+
+<div class="bg-white rounded-lg shadow-sm p-6">
+  <div class="flex justify-between items-start mb-4">
+    <h1 class="text-2xl font-bold">{{ post.title }}</h1>
+    {% if post.solved %}
+      <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">Solved</span>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-cols-3 gap-6">
+    <!-- Main content -->
+    <div class="col-span-2">
+      <div class="prose max-w-none">
+        {{ post.content }}
+        {% if post.image %}
+          <img src="{{ post.image.url }}" alt="{{ post.title }}" class="mt-4 rounded-lg w-full">
+        {% endif %}
+      </div>
+
+      <!-- Author info -->
+      <div class="mt-4 text-sm text-gray-500">
+        Posted by {{ post.author.username }} on {{ post.created_at|date:"F j, Y" }}
+      </div>
+
+      <!-- Comments section -->
+      <div class="mt-8">
+        <h3 class="text-lg font-semibold mb-4">Comments ({{ comments.count }})</h3>
+        <div class="space-y-4">
+          {% for comment in comments %}
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <p>{{ comment.content }}</p>
+              <p class="text-sm text-gray-500 mt-2">
+                By {{ comment.user.username }} on {{ comment.created_at|date:"F j, Y" }}
+              </p>
+            </div>
+          {% empty %}
+            <p class="text-gray-500">No comments yet</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Properties sidebar -->
+    <div class="bg-gray-50 p-4 rounded-lg h-fit">
+      <h3 class="font-semibold mb-4">Properties</h3>
+      <div class="space-y-2">
+        <p><strong>Material:</strong> {{ post.material|default:"Not specified" }}</p>
+        <p><strong>Size:</strong> {{ post.size|default:"Not specified" }} cm</p>
+        <p><strong>Color:</strong> {{ post.color|default:"Not specified" }}</p>
+        <p><strong>Shape:</strong> {{ post.shape|default:"Not specified" }}</p>
+        <p><strong>Weight:</strong> {{ post.weight|default:"Not specified" }} gr</p>
+      </div>
+    </div>
+  </div>
+</div>

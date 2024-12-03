@@ -10,29 +10,44 @@
     {% comment %} <link rel="stylesheet" href="{% static 'objects/css/homepage.css' %}"> {% endcomment %}
 </head>
 <body>
-    <header>
-        <div class="nav">
-            {% if user.is_authenticated %}
-            <button id="create-post-btn" class="action-btn">Create New Post</button>
-            {% endif %}
-            {% if user.is_authenticated %}
-                <form method="post" action="{% url 'logout' %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="nav-btn">Logout</button>
-                </form>
-                <a href="{% url 'profile' user.username %}" class="nav-link">{{ user.username }}</a>
-            {% else %}
-                <a href="{% url 'login' %}" class="btn nav-link">Login</a>
-                <a href="{% url 'register' %}" class="btn nav-link">Register</a>
-            {% endif %}
-        </div>
-        <!-- Wikidata Search Bar -->
-        <form method="get" action="{% url 'wikidata_search' %}">
-            <input type="text" name="q" placeholder="Search Wikidata">
-            <button type="submit">Search</button>
-        </form>
-        <div class="brand">
-            <h1>Object Finder</h1>
+    <header class="main-header">
+        <div class="header-container">
+            <!-- Brand Section -->
+            <div class="brand">
+                <h1>Object Finder</h1>
+                <span class="brand-tagline">Find and Identify Objects</span>
+            </div>
+    
+            <!-- Navigation Section -->
+            <div class="nav-section">
+                <div class="search-bar">
+                    <form method="get" action="{% url 'wikidata_search' %}">
+                        <input type="text" name="q" placeholder="Search Wikidata" class="search-input">
+                        <button class="search-button">
+                            Search
+                        </button>
+                    </form>
+                </div>
+                <nav class="nav-links">
+                    {% if user.is_authenticated %}
+                        {% comment %} <a href="{% url 'create_post' %}" class="btn create-post-btn">Create New Post</a> {% endcomment %}
+                        <button id="create-post-btn" class="btn create-post-btn">Create New Post</button>
+                        <div class="user-menu">
+                            <form method="post" action="{% url 'logout' %}" class="logout-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn logout-btn">Logout</button>
+                            </form>
+                            <a href="{% url 'profile' user.username %}" class="user-link">
+                                <span class="user-avatar">{{ user.username|slice:":1" }}</span>
+                                <span class="username">{{ user.username }}</span>
+                            </a>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn login-btn">Login</a>
+                        <a href="{% url 'register' %}" class="btn register-btn">Register</a>
+                    {% endif %}
+                </nav>
+            </div>
         </div>
     </header>
 
@@ -65,9 +80,9 @@
         </section>
     </main>
 
-    {% if user.is_authenticated %}
+    {% comment %} {% if user.is_authenticated %}
     <button id="create-post-btn" class="action-btn">Create New Post</button>
-    {% endif %}
+    {% endif %} {% endcomment %}
 
 
     <script>
@@ -79,18 +94,33 @@
     
         // Function to load post details into the main-content section
         function loadPostDetails(postId) {
-            fetch(`/post-details/${postId}/`)
+            // Show loading indicator
+            document.getElementById('main-content').innerHTML = 
+                '<div class="text-center p-8"><div>Loading...</div></div>';
+            
+            // Fetch post details
+            fetch(`/post/${postId}/details/`)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error(`Failed to load post details. Status: ${response.status}`);
+                        throw new Error('Network response was not ok');
                     }
                     return response.text();
                 })
                 .then(html => {
+                    // Update the main content area with the post details
                     document.getElementById('main-content').innerHTML = html;
-                    document.getElementById('main-content').classList.add('post-details-section');
+                    
+                    // Highlight selected post
+                    document.querySelectorAll('.post').forEach(post => {
+                        post.classList.remove('selected');
+                    });
+                    document.getElementById(`post-${postId}`).classList.add('selected');
                 })
-                .catch(error => handleFetchError(error, 'Unable to load post details.'));
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('main-content').innerHTML = 
+                        '<div class="text-center p-8 text-red-500">Error loading post details</div>';
+                });
         }
     
         // Function to handle new post creation

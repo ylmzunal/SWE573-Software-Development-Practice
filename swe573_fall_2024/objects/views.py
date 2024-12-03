@@ -146,16 +146,32 @@ def post_details(request, post_id):
         'comments': comments,
         'keywords': results['keywords'],  
         'can_mark_as_solved': can_mark_as_solved,
+        'is_homepage': False  # For standalone page
     })
 
 def post_details_partial(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    comments = post.comments.order_by('-created_at')  # Yorumlar için
+    comments = post.comments.order_by('created_at')
+    results = find_object_from_post(post_id)
+
+    # Mantığı burada belirleyin
+    can_mark_as_solved = (
+        request.user.is_authenticated and
+        (post.author == request.user or request.user.is_superuser) and
+        not post.solved
+    )
+
     context = {
         'post': post,
         'comments': comments,
+        'keywords': results['keywords'],  
+        'can_mark_as_solved': can_mark_as_solved,
+        'is_solved': post.solved,
+        'is_homepage': True  # For standalone page
     }
-    return render(request, 'objects/partials/post_details_partial.html', context)
+    
+    # Use the existing post_details.html template
+    return render(request, 'post_details.html', context)
 
 def add_comment(request, post_id):
     if request.method == "POST":
@@ -180,65 +196,55 @@ def add_comment(request, post_id):
 #     return JsonResponse({"success": False, "message": "Invalid request."})
 
 
-@csrf_exempt
-def vote_post(request, post_id, vote_type):
-    post = get_object_or_404(Post, id=post_id)
-    if vote_type == 'upvote':
-        post.upvotes = post.upvotes + 1 if post.upvotes is not None else 1
-    elif vote_type == 'downvote':
-        post.downvotes = post.downvotes + 1 if post.downvotes is not None else 1
-    post.save()
-    return JsonResponse({'upvotes': post.upvotes, 'downvotes': post.downvotes})
 
-@csrf_exempt
+
 def vote_comment(request, comment_id, vote_type):
-    comment = get_object_or_404(Comment, id=comment_id)
-    if vote_type == 'upvote':
-        comment.upvotes = comment.upvotes + 1 if comment.upvotes is not None else 1
-    elif vote_type == 'downvote':
-        comment.downvotes = comment.downvotes + 1 if comment.downvotes is not None else 1
-    comment.save()
-    return JsonResponse({'upvotes': comment.upvotes, 'downvotes': comment.downvotes})
+    try:
+        comment = Comment.objects.get(id=comment_id)
+        
+        if comment.post.solved:
+            return JsonResponse({
+                'success': False,
+                'message': 'Cannot vote on comments in solved posts'
+            }, status=400)
 
-def vote(request, type, id, vote_type):
-    if request.method == 'POST':
-        if type == 'post':
-            post = Post.objects.get(id=id)
-            if vote_type == 'up':
-                post.upvotes += 1
-            elif vote_type == 'down':
-                post.downvotes += 1
-            post.save()
-            return JsonResponse({'upvotes': post.upvotes, 'downvotes': post.downvotes})
-
-        elif type == 'comment':
-            comment = Comment.objects.get(id=id)
-            if vote_type == 'up':
-                comment.upvotes += 1
-            elif vote_type == 'down':
-                comment.downvotes += 1
-            comment.save()
-            return JsonResponse({'upvotes': comment.upvotes, 'downvotes': comment.downvotes})
-
-    return JsonResponse({'error': 'Invalid request'}, status=400)
-
-
-
-@csrf_exempt
-def vote_comment(request, comment_id, action):
-    if request.method == 'POST' and request.user.is_authenticated:
-        comment = get_object_or_404(Comment, id=comment_id)
-        if action == 'upvote':
+        if vote_type == 'upvote':
+            # Increment upvotes
+            if not hasattr(comment, 'upvotes') or comment.upvotes is None:
+                comment.upvotes = 0
             comment.upvotes += 1
-        elif action == 'downvote':
+        elif vote_type == 'downvote':
+            # Increment downvotes
+            if not hasattr(comment, 'downvotes') or comment.downvotes is None:
+                comment.downvotes = 0
             comment.downvotes += 1
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid vote type'
+            }, status=400)
+        
         comment.save()
+        
         return JsonResponse({
             'success': True,
             'upvotes': comment.upvotes,
-            'downvotes': comment.downvotes,
+            'downvotes': comment.downvotes
         })
-    return JsonResponse({'success': False, 'error': 'Invalid request or not authenticated.'})
+        
+    except Comment.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Comment not found'
+        }, status=404)
+    except Exception as e:
+        print(f"Error in vote_comment: {str(e)}")  # For debugging
+        return JsonResponse({
+            'success': False,
+            'message': 'Error processing vote'
+        }, status=500)
+
+
 
 @login_required
 def mark_as_solved(request, post_id):

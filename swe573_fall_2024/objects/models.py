@@ -55,12 +55,18 @@ class Post(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
     author = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='posts', null=True, blank=True)
-    solved = models.BooleanField(default=False)
     image = models.ImageField(upload_to='post_images/', null=True, blank=True)
     upvotes = models.IntegerField(default=0)  # Add upvotes field
     downvotes = models.IntegerField(default=0)  # Add downvotes field
     tags = models.ManyToManyField(Tag, blank=True) 
     matched_object = models.TextField(blank=True, null=True)  # Sonuç: Tavsiye edilen nesne
+    solved = models.BooleanField(default=False)
+    solved_at = models.DateTimeField(null=True, blank=True)
+
+    def mark_as_solved(self):
+        self.solved = True
+        self.solved_at = timezone.now()
+        self.save()
     
     material = models.CharField(              # Materyal özelliği
         max_length=100, blank=True, null=True,

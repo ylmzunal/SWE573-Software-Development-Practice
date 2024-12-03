@@ -1,69 +1,85 @@
 {% load static %}
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ user_profile.username }}</title>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    
-</head>
-<body>
-    <div class="profile-container">
-        <header>
-            <!-- Left: Username -->
-            <h1>{{ user_profile.username }}</h1>
-    
-            <!-- Right: Object Finder -->
-            <a href="{% url 'homepage' %}">Object Finder</a>
-        </header>
-        
-        <section class="profile-info">
-            <h2>Bio:</h2>
-            <p>{{ bio }}</p>
-
-            <div class="profile-stats">
-                <p><strong>Total Posts:</strong> {{ total_posts }}</p>
-                <p><strong>Total Comments:</strong> {{ total_comments }}</p>
-                <p><strong>Upvotes:</strong> {{ upvotes }}</p>
-                <p><strong>Downvotes:</strong> {{ downvotes }}</p>
-            </div>
-        </section>
-
-        <section class="profile-badges">
-            <h2>Badges</h2>
-            <ul>
-                {% for badge in badges %}
-                    <li>{{ badge }}</li>
-                {% endfor %}
-            </ul>
-        </section>
-
-        <section class="profile-achievements">
-            <h2>Achievements</h2>
-            <ul>
-                {% for achievement in achievements %}
-                    <li>{{ achievement }}</li>
-                {% endfor %}
-            </ul>
-        </section>
-
-        <section class="profile-posts">
-            <h2>Posts by {{ user_profile.username }}</h2>
-            {% if posts %}
-                <ul>
-                    {% for post in posts %}
-                        <li>
-                            <a href="{% url 'post_details' post.id %}">{{ post.title }}</a>
-                            <p>{{ post.created_at|date:"M d, Y" }}</p>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>{{ user_profile.username }} hasn't posted anything yet.</p>
-            {% endif %}
-        </section>
+<link rel="stylesheet" href="{% static 'objects/css/profile.css' %}">
+<div class="profile-container">
+    <!-- Header Section -->
+    <div class="profile-header">
+        <h1 class="profile-title">{{ user_profile.username }}</h1>
+        <p class="member-since">Member since {{ user_profile.date_joined|date:"F Y" }}</p>
+        <a href="{% url 'homepage' %}" class="back-link">Back to Object Finder</a>
     </div>
-</body>
-</html>
+
+    <!-- Main Content Grid -->
+    <div class="profile-grid">
+        <!-- Left Column -->
+        <div class="profile-info">
+            <!-- Bio Section -->
+            <div class="card">
+                <h2>Bio</h2>
+                <p>{% if bio %}{{ bio }}{% else %}No bio available.{% endif %}</p>
+            </div>
+
+            <!-- Statistics Section -->
+            <div class="card">
+                <h2>Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value">{{ total_posts }}</span>
+                        <span class="stat-label">Posts</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ total_comments }}</span>
+                        <span class="stat-label">Comments</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ upvotes }}</span>
+                        <span class="stat-label">Upvotes</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ downvotes }}</span>
+                        <span class="stat-label">Downvotes</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Badges & Achievements -->
+            <div class="card">
+                <div class="tabs">
+                    <button class="tab active">Badges ({{ badges|length }})</button>
+                    <button class="tab">Achievements ({{ achievements|length }})</button>
+                </div>
+                <div class="tab-content">
+                    <div class="badges-grid">
+                        {% if badges %}
+                            {% for badge in badges %}
+                                <div class="badge-item">{{ badge }}</div>
+                            {% endfor %}
+                        {% else %}
+                            <p>No badges yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="posts-section">
+            <div class="card">
+                <h2>Posts by {{ user_profile.username }}</h2>
+                <div class="posts-list">
+                    {% if posts %}
+                        {% for post in posts %}
+                            <div class="post-item">
+                                <a href="{% url 'post_details' post.id %}" class="post-link">
+                                    <h3>{{ post.title }}</h3>
+                                    <span class="post-date">{{ post.created_at|date:"M d, Y" }}</span>
+                                </a>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-posts">{{ user_profile.username }} hasn't posted anything yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
