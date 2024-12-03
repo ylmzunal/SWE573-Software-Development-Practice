@@ -70,6 +70,81 @@
     border-bottom: 2px solid #6c9f3a;
     padding-bottom: 8px;
 }
+/* Bio Section Styles */
+.bio-content {
+    position: relative;
+}
+
+.bio-text {
+    min-height: 50px;
+    line-height: 1.5;
+}
+
+.bio-form {
+    margin-top: 10px;
+}
+
+.bio-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.bio-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.edit-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 6px 12px;
+    background-color: #6c9f3a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.edit-btn:hover {
+    background-color: #588b26;
+}
+
+.save-btn {
+    background-color: #6c9f3a;
+    color: white;
+}
+
+.cancel-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.save-btn:hover {
+    background-color: #588b26;
+}
+
+.cancel-btn:hover {
+    background-color: #c82333;
+}
 
 /* Stats Grid */
 .stats-grid {

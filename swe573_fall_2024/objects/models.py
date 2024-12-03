@@ -130,7 +130,7 @@ class Comment(models.Model):
     
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile_data')
-    bio = models.TextField(blank=True)
+    bio = models.TextField(max_length=500, blank=True, default='')
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
     # Additional fields for badges, ranks, achievements
     badges = models.ManyToManyField('Badge', blank=True)

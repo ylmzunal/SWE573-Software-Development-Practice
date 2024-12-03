@@ -15,7 +15,29 @@
             <!-- Bio Section -->
             <div class="card">
                 <h2>Bio</h2>
-                <p>{% if bio %}{{ bio }}{% else %}No bio available.{% endif %}</p>
+                <div class="bio-content">
+                    <!-- Bio display -->
+                    <div id="bio-display" class="bio-text">
+                        {% if bio %}{{ bio }}{% else %}No bio available.{% endif %}
+                    </div>
+                    
+                    <!-- Edit form (hidden by default) -->
+                    {% if user == user_profile %}
+                        <form id="bio-form" class="bio-form" style="display: none;">
+                            {% csrf_token %}
+                            <textarea name="bio" class="bio-textarea">{{ bio }}</textarea>
+                            <div class="bio-actions">
+                                <button type="button" class="btn save-btn" onclick="saveBio()">Save</button>
+                                <button type="button" class="btn cancel-btn" onclick="toggleBioEdit()">Cancel</button>
+                            </div>
+                        </form>
+                        
+                        <!-- Edit button -->
+                        <button onclick="toggleBioEdit()" id="edit-bio-btn" class="btn edit-btn">
+                            Edit Bio
+                        </button>
+                    {% endif %}
+                </div>
             </div>
 
             <!-- Statistics Section -->
@@ -83,3 +105,55 @@
         </div>
     </div>
 </div>
+
+
+<script>
+function toggleBioEdit() {
+    const bioDisplay = document.getElementById('bio-display');
+    const bioForm = document.getElementById('bio-form');
+    const editBtn = document.getElementById('edit-bio-btn');
+
+    if (bioForm.style.display === 'none') {
+        bioDisplay.style.display = 'none';
+        bioForm.style.display = 'block';
+        editBtn.style.display = 'none';
+    } else {
+        bioDisplay.style.display = 'block';
+        bioForm.style.display = 'none';
+        editBtn.style.display = 'block';
+    }
+}
+
+function saveBio() {
+    const bioForm = document.getElementById('bio-form');
+    const bioText = bioForm.querySelector('textarea[name="bio"]').value;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    fetch('/update-bio/', {  // Updated URL
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken
+        },
+        body: `bio=${encodeURIComponent(bioText)}`
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            document.getElementById('bio-display').textContent = data.bio || 'No bio available.';
+            toggleBioEdit();
+        } else {
+            alert(data.message || 'Error updating bio');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating bio');
+    });
+}
+</script>

@@ -2,13 +2,14 @@ import requests
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from .models import Post, Comment, Object
+from .models import Post, Comment, Object, Profile
 from .forms import PostForm, CommentForm,  RegistrationForm, RegisterForm
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from PIL import Image
 import logging
 import spacy
@@ -259,6 +260,34 @@ def mark_as_solved(request, post_id):
         return JsonResponse({'success': False, 'message': 'You are not authorized to mark this post as solved.'}, status=403)
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=400)
 
+
+@login_required
+@require_POST
+def update_bio(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'message': 'You must be logged in to update your bio'
+        }, status=403)
+    
+    try:
+        bio = request.POST.get('bio', '').strip()
+        
+        # Get or create user profile
+        profile, created = Profile.objects.get_or_create(user=request.user)
+        profile.bio = bio
+        profile.save()
+        
+        return JsonResponse({
+            'success': True,
+            'bio': bio or 'No bio available.'
+        })
+    except Exception as e:
+        print(f"Error updating bio: {str(e)}")  # For debugging
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
 
 ######################### AI Agent ####################
 
