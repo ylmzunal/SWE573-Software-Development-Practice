@@ -1,0 +1,44 @@
+<div id="post-details">
+    <div class="post-content">
+        <h2>{{ post.title }}</h2>
+        <p>{{ post.content }}</p>
+        {% if post.image %}
+        <img src="{{ post.image.url }}" alt="{{ post.title }}">
+        {% endif %}
+
+        <div class="button-group">
+            <form method="GET" action="{% url 'search_results' %}">
+                <button type="submit">Search Wikidata</button>
+            </form>
+            {% if can_mark_as_solved %}
+            <form method="POST" action="{% url 'mark_as_solved' post.id %}">
+                {% csrf_token %}
+                <button type="submit">Mark as Solved</button>
+            </form>
+            {% endif %}
+            <small>Author: {{ post.author.username }} | {{ post.created_at }} | Answers: {{ post.comments.count }}</small>
+        </div>
+
+        <div id="comments-section">
+            <h3>Comments</h3>
+            {% for comment in comments %}
+            <div class="comment">
+                <p>{{ comment.content }}</p>
+                <small>Author: {{ comment.user.username|default:"Anonymous" }} | {{ comment.created_at }}</small>
+            </div>
+            {% empty %}
+            <p>No comments yet. Be the first to comment!</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="post-properties">
+        <h2>Properties</h2>
+        <ul>
+            <li><strong>Material:</strong> {{ post.material }}</li>
+            <li><strong>Size (cm):</strong> {{ post.size }}</li>
+            <li><strong>Color:</strong> {{ post.color }}</li>
+            <li><strong>Shape:</strong> {{ post.shape }}</li>
+            <li><strong>Weight (gr):</strong> {{ post.weight }}</li>
+        </ul>
+    </div>
+</div>

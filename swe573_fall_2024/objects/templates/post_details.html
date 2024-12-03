@@ -1,5 +1,84 @@
 {% load static %}
-{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'objects/css/post_details.css' %}">
+    <title>{{ post.title }}</title>
+</head>
+<body class="post-details-page">
+    <!-- Header -->
+    <header>
+        <a href="{% url 'homepage' %}">Home</a>
+        <h1>Post Details</h1>
+    </header>
+
+    <!-- Ana İçerik -->
+    <div class="container">
+        <div id="post-details">
+            <!-- Post İçeriği -->
+            <div class="post-content">
+                <h2>{{ post.title }}</h2>
+                <p>{{ post.content }}</p>
+                {% if post.image %}
+                <img src="{{ post.image.url }}" alt="{{ post.title }}">
+                {% endif %}
+
+                <!-- Butonlar ve Metadata -->
+                <div class="button-group">
+                    <form method="GET" action="{% url 'search_results' %}" style="display: inline;">
+                        <button class="button" type="submit">Search Wikidata</button>
+                    </form>
+                    {% if can_mark_as_solved %}
+                    <form method="POST" action="{% url 'mark_as_solved' post.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button class="button" type="submit">Mark as Solved</button>
+                    </form>
+                    {% endif %}
+                    <small>Author: {{ post.author.username }} | {{ post.created_at }} | Answers: {{ post.comments.count }}</small>
+                </div>
+
+                <!-- Yorumlar -->
+                <div id="comments-section">
+                    <h3>Comments</h3>
+                    {% for comment in comments %}
+                    <div class="comment">
+                        <p>{{ comment.content }}</p>
+                        <small>Author: {{ comment.user.username|default:"Anonymous" }} | {{ comment.created_at }}</small>
+                    </div>
+                    {% empty %}
+                    <p>No comments yet. Be the first to comment!</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Yorum Ekleme Formu -->
+                <form id="comment-form" method="POST" action="{% url 'add_comment' post.id %}">
+                    {% csrf_token %}
+                    <textarea name="content" placeholder="Add your comment here..." required></textarea>
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+
+            <!-- Properties Bilgileri -->
+            <div class="post-properties">
+                <h2>Properties</h2>
+                <ul>
+                    <li><strong>Material:</strong> {{ post.material|default:"None" }}</li>
+                    <li><strong>Size (cm):</strong> {{ post.size|default:"None" }}</li>
+                    <li><strong>Color:</strong> {{ post.color|default:"None" }}</li>
+                    <li><strong>Shape:</strong> {{ post.shape|default:"None" }}</li>
+                    <li><strong>Weight (gr):</strong> {{ post.weight|default:"None" }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+{% comment %} {% load static %}
 
 <link rel="stylesheet" href="{% static 'objects/css/post_details.css' %}">
 
@@ -24,7 +103,8 @@
             {% if post.weight %}{{ post.weight }}kg{% endif %}
         ">
         <button type="submit">Search Wikidata</button>
-    </form>
+    </form> {% endcomment %}
+
     {% comment %} <div style="margin-top: 20px;">
         <form action="{% url 'analyze_post' post.id %}" method="GET">
             <button type="submit">Analyze Post</button>
@@ -44,7 +124,7 @@
             <button type="submit" class="btn btn-primary">Search Wikidata</button>
         </form> {% endcomment %}
 
-    <div class="post-image-container" style="text-align: center;">
+    {% comment %} <div class="post-image-container" style="text-align: center;">
         {% if post.image %}
         <img src="{{ post.image.url }}" alt="{{ post.title }}" style="width: 100%; max-width: 800px; height: auto;">
         {% endif %}
@@ -66,53 +146,11 @@
         <p><strong>This post has been marked as solved.</strong></p>
     {% endif %}
 
-   {% comment %} <div class="post-votes">
-        <button onclick="vote('post', {{ post.id }}, 'upvote')">
-            &#x25B2;
-        </button>
-        <span id="post-upvotes-{{ post.id }}">{{ post.upvotes }}</span>
-        <button onclick="vote('post', {{ post.id }}, 'downvote')">
-            &#x25BC;
-        </button>
-        <span id="post-downvotes-{{ post.id }}">{{ post.downvotes }}</span>
-    </div> {% endcomment %}
-
-
     <div id="comments-section">
         {% include 'partials/comments.html' with post=post comments=comments %}
     </div>
 
-    {% comment %} <form id="comment-form" method="post" action="{% url 'add_comment' post.id %}">
-        {% csrf_token %}
-        <input type="text" name="content" placeholder="Add a comment" required>
-        <button type="submit">Submit</button>
-    </form> {% endcomment %}
-
-    {% comment %} <div id="comments-section">
-        <h3>Answers</h3>
-        {% for comment in comments %}
-            <div class="comment">
-                <p>{{ comment.content }}</p>
-                <small>
-                    Author: {% if comment.user %} {{ comment.user.username }} {% else %} Anonymous {% endif %}
-                    | {{ comment.created_at }}
-                </small>
-                <!-- Oy verme butonları -->
-                <div class="comment-votes">
-                    <button class="vote-btn" onclick="voteComment({{ comment.id }}, 'upvote')">
-                        &#x25B2; <!-- Up -->
-                    </button>
-                    <span id="comment-upvotes-{{ comment.id }}">{{ comment.upvotes }}</span>
-                    <button class="vote-btn" onclick="voteComment({{ comment.id }}, 'downvote')">
-                        &#x25BC; <!-- Down -->
-                    </button>
-                    <span id="comment-downvotes-{{ comment.id }}">{{ comment.downvotes }}</span>
-                </div>
-            </div>
-        {% empty %}
-            <p>No answers yet. Be the first to answer!</p>
-        {% endfor %}
-    </div> {% endcomment %}
+   
 
     {% if not post.solved %}
     <form id="comment-form" method="POST" action="{% url 'add_comment' post.id %}">
@@ -121,40 +159,5 @@
         <button type="submit">Submit</button>
     </form>
     {% endif %}
-</div>
+</div> {% endcomment %}
 
-
-
-{% comment %} <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const commentForm = document.getElementById('comment-form');
-        const commentsSection = document.getElementById('comments-section');
-    
-        commentForm.addEventListener('submit', function (event) {
-            event.preventDefault(); // Sayfa yenilemeyi durdur
-    
-            const formData = new FormData(commentForm);
-    
-            fetch(commentForm.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Yorumları güncelle
-                    commentsSection.innerHTML = data.html;
-                    commentForm.reset(); // Formu sıfırla
-                } else {
-                    alert(data.message || "An error occurred.");
-                }
-            })
-            .catch(error => {
-                console.error('Error adding comment:', error);
-            });
-        });
-    });
-</script> {% endcomment %}

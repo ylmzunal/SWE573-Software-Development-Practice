@@ -25,6 +25,7 @@ urlpatterns = [
     path('vote-comment/<int:comment_id>/<str:action>/', vote_comment, name='vote_comment'),
     path('post/<int:post_id>/mark-as-solved/', views.mark_as_solved, name='mark_as_solved'),
     path('post/<int:post_id>/', views.post_details, name='post_detail'),
+    path('post-details/<int:post_id>/partial/', views.post_details_partial, name='post_details_partial'),
     # path('post/<int:post_id>/analyze/', views.analyze_post, name='analyze_post'),
 ]
 

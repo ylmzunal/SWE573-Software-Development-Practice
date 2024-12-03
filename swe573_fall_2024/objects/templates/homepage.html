@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Object Finder</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% comment %} <link rel="stylesheet" href="{% static 'objects/css/homepage.css' %}"> {% endcomment %}
 </head>
 <body>
     <header>
@@ -87,6 +88,7 @@
                 })
                 .then(html => {
                     document.getElementById('main-content').innerHTML = html;
+                    document.getElementById('main-content').classList.add('post-details-section');
                 })
                 .catch(error => handleFetchError(error, 'Unable to load post details.'));
         }
@@ -155,65 +157,5 @@
             postList.insertAdjacentHTML('afterbegin', newPostHTML);
         }
     </script>
-
-
-    {% comment %} <script>
-        // Function to load post details into the main-content section
-        function loadPostDetails(postId) {
-            fetch(`/post-details/${postId}/`)
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('main-content').innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Error loading post details:', error);
-                    alert('Unable to load post details.');
-                });
-        }
-
-    
-        // Functionality for creating a new post
-        document.getElementById('create-post-btn').addEventListener('click', function() {
-            fetch('/create-post-form/')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('main-content').innerHTML = html;
-        
-                    const postForm = document.getElementById('post-form');
-                    postForm.addEventListener('submit', async function(event) {
-                        event.preventDefault();
-                        const formData = new FormData(postForm);
-                        const response = await fetch('/create-post/', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                            },
-                            body: formData,
-                        });
-        
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.success) {
-                                const postList = document.getElementById('post-list');
-                                const newPostHTML = `
-                                    <div class="post" id="post-${data.post.id}" onclick="loadPostDetails(${data.post.id})">
-                                        <h3>${data.post.title}</h3>
-                                        <p>${data.post.content}</p>
-                                        ${data.post.image_url ? `<img src="${data.post.image_url}" alt="Post Image">` : ''}
-                                        <small>By ${data.post.author || 'Anonymous'}</small>
-                                    </div>
-                                `;
-                                postList.insertAdjacentHTML('afterbegin', newPostHTML);
-                                document.getElementById(`post-${data.post.id}`).click();
-                            } else {
-                                alert('Error: ' + JSON.stringify(data.errors));
-                            }
-                        } else {
-                            alert('Unexpected error occurred.');
-                        }
-                    });
-                });
-        });
-    </script> {% endcomment %}
 </body>
 </html>

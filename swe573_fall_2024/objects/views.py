@@ -148,7 +148,14 @@ def post_details(request, post_id):
         'can_mark_as_solved': can_mark_as_solved,
     })
 
-
+def post_details_partial(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    comments = post.comments.order_by('-created_at')  # Yorumlar için
+    context = {
+        'post': post,
+        'comments': comments,
+    }
+    return render(request, 'objects/partials/post_details_partial.html', context)
 
 def add_comment(request, post_id):
     if request.method == "POST":
