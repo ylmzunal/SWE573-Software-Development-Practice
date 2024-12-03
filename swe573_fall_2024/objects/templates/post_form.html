@@ -1,104 +1,60 @@
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Post</title>
-</head>
-<body>
-    <h3>Create a New Post</h3>
-
-    <form id="post-form" method="post" enctype="multipart/form-data" action="{% url 'create_post_form' %}">
+<link rel="stylesheet" href="{% static 'objects/css/post_form.css' %}">
+<div class="post-form-container">
+    <form method="POST" enctype="multipart/form-data" class="post-form">
         {% csrf_token %}
-        <div>
-            <label for="id_title">Title:</label>
+        <h2>Create New Post</h2>
+        
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">Title</label>
             {{ form.title }}
+            {% if form.title.errors %}
+                <div class="error-message">{{ form.title.errors }}</div>
+            {% endif %}
         </div>
-        <div>
-            <label for="id_content">Content:</label>
+
+        <div class="form-group">
+            <label for="{{ form.content.id_for_label }}">Description</label>
             {{ form.content }}
+            {% if form.content.errors %}
+                <div class="error-message">{{ form.content.errors }}</div>
+            {% endif %}
         </div>
-        <div>
-            <label for="id_material">Material:</label>
-            {{ form.material }}
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="{{ form.material.id_for_label }}">Material</label>
+                {{ form.material }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.size.id_for_label }}">Size (cm)</label>
+                {{ form.size }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.color.id_for_label }}">Color</label>
+                {{ form.color }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.shape.id_for_label }}">Shape</label>
+                {{ form.shape }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.weight.id_for_label }}">Weight (gr)</label>
+                {{ form.weight }}
+            </div>
         </div>
-        <div>
-            <label for="id_size">Size (cm):</label>
-            {{ form.size }}
-        </div>
-        <div>
-            <label for="id_color">Color:</label>
-            {{ form.color }}
-        </div>
-        <div>
-            <label for="id_shape">Shape:</label>
-            {{ form.shape }}
-        </div>
-        <div>
-            <label for="id_weight">Weight (kg):</label>
-            {{ form.weight }}
-        </div>
-        <div>
-            <label for="id_image">Upload Image:</label>
+
+        <div class="form-group image-upload">
+            <label for="{{ form.image.id_for_label }}">Upload Image</label>
             {{ form.image }}
+            <small class="help-text">Supported formats: JPG, PNG, GIF (max 5MB)</small>
         </div>
-        <button type="submit">Submit</button>
+
+        <button type="submit" class="submit-btn">Create Post</button>
     </form>
-</body>
-</html>
-
-{% comment %} <---------- old version ------------> {% endcomment %}
-{% comment %} <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Post</title>
-</head>
-<body>
-    <h3>Create a New Post</h3>
-
-    <form id="post-form" " method="post" enctype="multipart/form-data" action="{% url 'create_post_form' %}">
-        {% csrf_token %}
-    <div>
-        <label for="id_title">Title:</label>
-        {{ form.title }}
-    </div>
-    <div>
-        <label for="id_content">Content:</label>
-        {{ form.content }}
-    </div>
-        <div>
-            <label for="id_material">Material:</label>
-            {{ form.material }}
-        </div>
-        <div>
-            <label for="id_size">Size (cm):</label>
-            {{ form.size }}
-        </div>
-        <div>
-            <label for="id_color">Color:</label>
-            {{ form.color }}
-        </div>
-        <div>
-            <label for="id_shape">Shape:</label>
-            {{ form.shape }}
-        </div>
-        <div>
-            <label for="id_weight">Weight (kg):</label>
-            {{ form.weight }}
-        </div>
-        <div>
-            <label for="id_image">Upload Image:</label>
-            {{ form.image }}
-        </div>
-        <button type="submit">Submit</button>
-    </form>
-
-    <script src="{% static 'js/main.js' %}"></script>  
-</body>
-
-</html> {% endcomment %}
-
+</div>

@@ -63,7 +63,7 @@ def profile_view(request, username):
         'total_comments': comments.count(),
         'upvotes': sum(post.upvotes for post in posts),  # Assuming 'upvotes' is a field in Post
         'downvotes': sum(post.downvotes for post in posts),  # Assuming 'downvotes' is a field in Post
-        'badges': user.profile.badges if hasattr(user, 'profile') and user.profile.badges else ['No badges yet.'],
+        'badges': user.profile.badges.all() if hasattr(user, 'profile') and user.profile.badges else ['No badges yet.'],
         'achievements': user.profile.achievements if hasattr(user, 'profile') and user.profile.achievements else ['No achievements yet.'],
         'posts': posts,
     }
@@ -98,7 +98,6 @@ def create_post(request):
             post = form.save(commit=False)
             post.author = request.user
             post.save()
-            # Post oluşturulduktan sonra detay sayfasına yönlendirme
             return redirect('post_details', post_id=post.id)
     else:
         form = PostForm()
@@ -183,6 +182,19 @@ def add_comment(request, post_id):
         # Yorum eklendikten sonra detay sayfasına yönlendir
         return redirect('post_detail', post_id=post.id)
     
+
+def get_wikidata_label(entity_id):
+    """Given a Wikidata entity ID, fetch the label in English."""
+    url = f"https://www.wikidata.org/wiki/Special:EntityData/{entity_id}.json"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        entities = data.get("entities", {})
+        label = entities.get(entity_id, {}).get("labels", {}).get("en", {}).get("value", "Unknown")
+        return label
+    return "Unknown"
+
+
 # def add_comment(request, post_id):
 #     if request.method == "POST":
 #         post = get_object_or_404(Post, id=post_id)

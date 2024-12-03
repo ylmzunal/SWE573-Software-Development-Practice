@@ -31,14 +31,21 @@
 
                 <!-- Butonlar ve Metadata -->
                 <div class="button-group">
-                    <form method="GET" action="{% url 'search_results' %}" style="display: inline;">
-                        <button class="button" type="submit">Search Wikidata</button>
+                    <form action="{% url 'search_results' %}" method="GET">
+                        <input type="hidden" name="q" value="
+                            {% if post.material %}{{ post.material }} {% endif %}
+                            {% if post.size %}{{ post.size }}cm {% endif %}
+                            {% if post.color %}{{ post.color }} {% endif %}
+                            {% if post.shape %}{{ post.shape }} {% endif %}
+                            {% if post.weight %}{{ post.weight }}kg{% endif %}
+                        ">
+                        <button type="submit">Search Wikidata</button>
                     </form>
                     {% if can_mark_as_solved %}
                     <form method="POST" action="{% url 'mark_as_solved' post.id %}" style="display: inline;">
                         {% csrf_token %}
                         <button class="button" type="submit">Mark as Solved</button>
-                    </form>
+                    </form> 
                     {% endif %}
                     <small>Author: {{ post.author.username }} | {{ post.created_at }} | Answers: {{ post.comments.count }}</small>
                 </div>
@@ -142,4 +149,35 @@
             alert('Error voting. Please try again.');
         });
     }
+
 </script>
+
+
+<script>
+document.getElementById('mark-as-solved-btn').addEventListener('click', function() {
+    fetch('{% url "mark_as_solved" post.id %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{% csrf_token %}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the UI to reflect that the post is solved
+            // For example, you can disable the "Mark as Solved" button
+            document.getElementById('mark-as-solved-btn').disabled = true;
+            alert(data.message);
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error marking post as solved:', error);
+        alert('An error occurred while marking the post as solved.');
+    });
+});
+</script>
+
+

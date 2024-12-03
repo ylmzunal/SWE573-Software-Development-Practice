@@ -30,8 +30,10 @@
                 </div>
                 <nav class="nav-links">
                     {% if user.is_authenticated %}
-                        {% comment %} <a href="{% url 'create_post' %}" class="btn create-post-btn">Create New Post</a> {% endcomment %}
-                        <button id="create-post-btn" class="btn create-post-btn">Create New Post</button>
+                        <a href="{% url 'create_post' %}" class="btn create-post-btn">Create New Post</a> 
+                        {% comment %} <button id="create-post-btn" class="btn create-post-btn">Create New Post</button> {% endcomment %}
+
+
                         <div class="user-menu">
                             <form method="post" action="{% url 'logout' %}" class="logout-form">
                                 {% csrf_token %}
