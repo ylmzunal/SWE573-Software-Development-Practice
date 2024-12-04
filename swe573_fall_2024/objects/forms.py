@@ -38,8 +38,8 @@ class PostForm(forms.ModelForm):
         model = Post
         fields = ['title', 'content', 'material', 'size', 'color', 'shape', 'weight', 'image']
         widgets = {
-            'title': forms.TextInput(attrs={'placeholder': 'Post Başlığı'}),
-            'content': forms.Textarea(attrs={'placeholder': 'Post İçeriği'}),
+            'title': forms.TextInput(attrs={'placeholder': 'Post Title'}),
+            'content': forms.Textarea(attrs={'placeholder': 'Post Content'}),
         }
 
 
