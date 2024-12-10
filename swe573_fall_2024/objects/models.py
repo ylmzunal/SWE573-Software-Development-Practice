@@ -90,12 +90,24 @@ class Post(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    last_edited_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name='edited_posts'
+    )
 
-    
     def save(self, *args, **kwargs):
-        # Post nesnesini önce kaydet
+        if not self.id:  # New post
+            self.created_at = timezone.now()
+        self.updated_at = timezone.now()
         super().save(*args, **kwargs)
-        self.add_tags()  # Otomatik etiketleme
+        self.add_tags()
+    
+    # def save(self, *args, **kwargs):
+    #     # Post nesnesini önce kaydet
+    #     super().save(*args, **kwargs)
+    #     self.add_tags()  # Otomatik etiketleme
 
     def add_tags(self):
         """
@@ -125,6 +137,19 @@ class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     upvotes = models.IntegerField(default=0)  # Add upvotes field
     downvotes = models.IntegerField(default=0)  # Add downvotes field
+    updated_at = models.DateTimeField(auto_now=True)
+    last_edited_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name='edited_comments'
+    )
+
+    def save(self, *args, **kwargs):
+        if not self.id:  # New comment
+            self.created_at = timezone.now()
+        self.updated_at = timezone.now()
+        super().save(*args, **kwargs)
 
 ###############
     

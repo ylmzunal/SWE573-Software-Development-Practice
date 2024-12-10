@@ -1,0 +1,58 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Comment - Object Finder</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'objects/css/post_details.css' %}">
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <div class="brand">
+                <a href="{% url 'homepage' %}" style="text-decoration: none; color: inherit;">
+                    <h1>Object Finder</h1>
+                </a>
+                <span class="brand-tagline">Find and Identify Objects</span>
+            </div>
+            
+            <div class="nav-section">
+                <nav class="nav-links">
+                    {% if user.is_authenticated %}
+                        <div class="user-menu">
+                            <form method="post" action="{% url 'logout' %}" class="logout-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn logout-btn">Logout</button>
+                            </form>
+                            <a href="{% url 'profile' user.username %}" class="user-link">
+                                <span class="user-avatar">{{ user.username|slice:":1" }}</span>
+                                <span class="username">{{ user.username }}</span>
+                            </a>
+                        </div>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="edit-comment-container">
+            <h2>Edit Comment</h2>
+            <form method="POST" class="edit-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="content">Comment Content:</label>
+                    <textarea id="content" name="content" class="comment-textarea" required>{{ comment.content }}</textarea>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="save-btn">Save Changes</button>
+                    <a href="{% url 'post_details' post.id %}" class="cancel-btn">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+</html> 

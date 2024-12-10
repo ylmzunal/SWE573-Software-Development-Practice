@@ -7,9 +7,9 @@
 }
 
 .post-details-page .container {
-    max-width: 1100px;
-    margin: 30px auto;
-    padding: 0 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
 /* Header Refinement */
@@ -38,27 +38,23 @@
 /* Post Details Layout */
 .post-details-page #post-details {
     display: flex;
-    background: rgb(208, 206, 206);
-    border-radius: 12px;
-    padding: 30px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
     gap: 30px;
-    transition: box-shadow 0.3s ease;
-}
-
-.post-details-page #post-details:hover {
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
 }
 
 .post-details-page .post-content {
-    flex: 3;
-    padding-right: 30px;
-    border-right: 1px solid #e9ecef;
+    flex: 1;
+    max-width: 70%;
 }
 
 .post-details-page .post-properties {
-    flex: 1;
-    padding-left: 30px;
+    width: 25%;
+    min-width: 250px;
+    padding: 20px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
 }
 
 /* Typography */
@@ -78,16 +74,6 @@
 .post-details-page .post-content img {
     max-width: 100%;
     height: auto;
-    max-height: 400px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-}
-
-.post-details-page .post-content img:hover {
-    transform: scale(1.02);
 }
 
 /* Button Styling */
@@ -119,18 +105,15 @@
 /* Comments Section */
 .post-details-page #comments-section {
     margin-top: 40px;
-    background-color: #f8f9fa;
-    padding: 25px;
-    border-radius: 10px;
+    border-top: 1px solid #ddd;
+    padding-top: 20px;
 }
 
 .post-details-page .comment {
-    background-color: white;
-    border-left: 4px solid #6c9f3a;
+    margin-bottom: 20px;
     padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 6px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    background: #f9f9f9;
+    border-radius: 4px;
 }
 
 .post-details-page .comment small {
@@ -276,4 +259,132 @@
     gap: 15px;
     color: #666;
     font-size: 0.9em;
+}
+
+/* Add these styles to your existing CSS */
+.edit-comment-form {
+    margin: 10px 0;
+}
+
+.edit-comment-form textarea {
+    width: 100%;
+    min-height: 60px;
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.edit-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+    margin-right: 10px;
+}
+
+.edit-btn:hover {
+    background-color: #5a6268;
+}
+
+.comment-actions {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.edit-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.save-btn, .cancel-btn {
+    padding: 5px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.save-btn {
+    background-color: #6c9f3a;
+    color: white;
+}
+
+.cancel-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.save-btn:hover {
+    background-color: #5a8830;
+}
+
+.cancel-btn:hover {
+    background-color: #c82333;
+}
+
+.comment-metadata {
+    margin-top: 10px;
+}
+
+.comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.edit-comment-form {
+    margin: 10px 0;
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.edit-comment-container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.comment-textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 15px;
+    margin: 20px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+}
+
+.save-btn, .cancel-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+}
+
+.save-btn {
+    background-color: #6c9f3a;
+    color: white;
+}
+
+.cancel-btn {
+    background-color: #dc3545;
+    color: white;
 }

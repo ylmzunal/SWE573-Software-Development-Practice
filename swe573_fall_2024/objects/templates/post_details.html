@@ -17,11 +17,14 @@
     </header>
     {% endif %}
 
+    <!-- Add CSRF token -->
+    {% csrf_token %}
 
     <!-- Ana İçerik -->
     <div class="container">
+        <!-- Main content wrapper -->
         <div id="post-details">
-            <!-- Post İçeriği -->
+            <!-- Left side: Post and Comments -->
             <div class="post-content">
                 <h2>{{ post.title }}</h2>
                 <p>{{ post.content }}</p>
@@ -32,74 +35,93 @@
                 <!-- Butonlar ve Metadata -->
                 <div class="button-group">
                     <form action="{% url 'search_results' %}" method="GET">
-                        <input type="hidden" name="q" value="
-                            {% if post.material %}{{ post.material }} {% endif %}
-                            {% if post.size %}{{ post.size }}cm {% endif %}
-                            {% if post.color %}{{ post.color }} {% endif %}
-                            {% if post.shape %}{{ post.shape }} {% endif %}
-                            {% if post.weight %}{{ post.weight }}kg{% endif %}
-                        ">
+                        <input type="hidden" name="q" value="{% if post.material %}{{ post.material }} {% endif %}{% if post.size %}{{ post.size }}cm {% endif %}{% if post.color %}{{ post.color }} {% endif %}{% if post.shape %}{{ post.shape }} {% endif %}{% if post.weight %}{{ post.weight }}kg{% endif %}">
                         <button type="submit">Search Wikidata</button>
                     </form>
-                    {% if can_mark_as_solved %}
-                    <form method="POST" action="{% url 'mark_as_solved' post.id %}" style="display: inline;">
-                        {% csrf_token %}
-                        <button class="button" type="submit">Mark as Solved</button>
-                    </form> 
+
+                    {% if user == post.author or user.is_superuser %}
+                        <a href="{% url 'edit_post' post.id %}" class="btn btn-primary">Edit Post</a>
                     {% endif %}
-                    <small>Author: {{ post.author.username }} | {{ post.created_at }} | Answers: {{ post.comments.count }}</small>
                 </div>
 
-                <!-- Yorumlar -->
+                <small>
+                    Author: {{ post.author.username }} | 
+                    {{ post.created_at|date:"Y-m-d H:i" }}
+                    {% if post.updated_at and post.updated_at != post.created_at %}
+                        | Last edited: {{ post.updated_at|date:"Y-m-d H:i" }}
+                    {% endif %}
+                    | Answers: {{ comments|length }}
+                </small>
+
+                <!-- Comments section below post content -->
                 <div id="comments-section">
                     <h3>Comments</h3>
                     {% for comment in comments %}
                     <div class="comment" id="comment-{{ comment.id }}">
-                        {{ comment.content }}
+                        <div class="comment-content" id="comment-content-{{ comment.id }}">
+                            {{ comment.content }}
+                        </div>
+                        
+                        <!-- Add edit form (hidden by default) -->
+                        <form class="edit-comment-form" id="edit-form-{{ comment.id }}" style="display: none;">
+                            {% csrf_token %}
+                            <textarea name="content">{{ comment.content }}</textarea>
+                            <div class="edit-buttons">
+                                <button type="button" class="save-btn" onclick="saveComment({{ comment.id }})">Save</button>
+                                <button type="button" class="cancel-btn" onclick="cancelEdit({{ comment.id }})">Cancel</button>
+                            </div>
+                        </form>
+
                         <small>
                             Author: {{ comment.user.username|default:"Anonymous" }} | 
-                            {{ comment.created_at }}
+                            {{ comment.created_at|date:"Y-m-d H:i" }}
+                            {% if comment.updated_at and comment.updated_at != comment.created_at %}
+                                | Last edited: {{ comment.updated_at|date:"Y-m-d H:i" }}
+                            {% endif %}
                         </small>
                         
-                        <div class="vote-buttons">
-                            {% if user.is_authenticated %}
-                                <!-- Voting buttons for authenticated users -->
-                                <button onclick="handleVote({{ comment.id }}, 'upvote')" class="vote-btn">
-                                    <span>👍</span>
-                                    <span id="upvotes-{{ comment.id }}">{{ comment.upvotes|default:0 }}</span>
-                                </button>
-                                <button onclick="handleVote({{ comment.id }}, 'downvote')" class="vote-btn">
-                                    <span>👎</span>
-                                    <span id="downvotes-{{ comment.id }}">{{ comment.downvotes|default:0 }}</span>
-                                </button>
-                            {% else %}
-                                <!-- Read-only vote display for non-authenticated users -->
-                                <div class="vote-display">
-                                    <span>👍 {{ comment.upvotes|default:0 }}</span>
-                                    <span>👎 {{ comment.downvotes|default:0 }}</span>
-                                    <small>(Login to vote)</small>
-                                </div>
+                        <div class="comment-actions">
+                            {% if user == comment.user or user.is_superuser %}
+                                <button onclick="editComment({{ comment.id }})" class="edit-btn">Edit</button>
                             {% endif %}
+                            
+                            <div class="vote-buttons">
+                                {% if user.is_authenticated %}
+                                    <button onclick="handleVote({{ comment.id }}, 'upvote')" class="vote-btn">
+                                        <span>👍</span>
+                                        <span id="upvotes-{{ comment.id }}">{{ comment.upvotes|default:0 }}</span>
+                                    </button>
+                                    <button onclick="handleVote({{ comment.id }}, 'downvote')" class="vote-btn">
+                                        <span>👎</span>
+                                        <span id="downvotes-{{ comment.id }}">{{ comment.downvotes|default:0 }}</span>
+                                    </button>
+                                {% else %}
+                                    <div class="vote-display">
+                                        <span>👍 {{ comment.upvotes|default:0 }}</span>
+                                        <span>👎 {{ comment.downvotes|default:0 }}</span>
+                                        <small>(Login to vote)</small>
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                {% endfor %}
-                </div>
+                    {% endfor %}
 
-                <!-- Yorum Ekleme Formu -->
-                {% if not post.solved %}
-                <form id="comment-form" method="POST" action="{% url 'add_comment' post.id %}">
-                    {% csrf_token %}
-                    <textarea name="content" placeholder="Add your comment here..." required></textarea>
-                    <button type="submit">Submit</button>
-                </form>
-                {% else %}
-                <div class="comments-closed">
-                    <p>Comments are closed because this post has been marked as solved.</p>
+                    {% if not post.solved %}
+                    <form id="comment-form" method="POST" action="{% url 'add_comment' post.id %}">
+                        {% csrf_token %}
+                        <textarea name="content" placeholder="Add your comment here..." required></textarea>
+                        <button type="submit">Submit</button>
+                    </form>
+                    {% else %}
+                    <div class="comments-closed">
+                        <p>Comments are closed because this post has been marked as solved.</p>
+                    </div>
+                    {% endif %}
                 </div>
-            {% endif %}
             </div>
 
-            <!-- Properties Bilgileri -->
+            <!-- Right side: Properties -->
             <div class="post-properties">
                 <h2>Properties</h2>
                 <ul>
@@ -178,6 +200,63 @@ document.getElementById('mark-as-solved-btn').addEventListener('click', function
         alert('An error occurred while marking the post as solved.');
     });
 });
+</script>
+
+
+<script>
+function editComment(commentId) {
+    console.log('Edit button clicked for comment:', commentId); // Debug log
+    // Hide content and show edit form
+    document.getElementById(`comment-content-${commentId}`).style.display = 'none';
+    document.getElementById(`edit-form-${commentId}`).style.display = 'block';
+}
+
+function cancelEdit(commentId) {
+    console.log('Cancel edit for comment:', commentId); // Debug log
+    // Show content and hide edit form
+    document.getElementById(`comment-content-${commentId}`).style.display = 'block';
+    document.getElementById(`edit-form-${commentId}`).style.display = 'none';
+}
+
+function saveComment(commentId) {
+    console.log('Saving comment:', commentId); // Debug log
+    const form = document.getElementById(`edit-form-${commentId}`);
+    const content = form.querySelector('textarea').value;
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    console.log('CSRF Token:', csrftoken); // Debug log
+    console.log('Content:', content); // Debug log
+
+    fetch(`/comment/${commentId}/edit/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify({ content: content })
+    })
+    .then(response => {
+        console.log('Response status:', response.status); // Debug log
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data); // Debug log
+        if (data.success) {
+            // Update the comment content
+            document.getElementById(`comment-content-${commentId}`).textContent = content;
+            // Hide the edit form
+            cancelEdit(commentId);
+            // Optionally update the last edited timestamp
+            location.reload(); // Refresh to show updated timestamp
+        } else {
+            alert(data.message || 'Error updating comment');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating comment. Please try again.');
+    });
+}
 </script>
 
 

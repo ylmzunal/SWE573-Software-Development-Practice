@@ -24,6 +24,44 @@
       </div>
 
       <!-- Comments section -->
+      <div id="comments-section">
+        <h3>Comments</h3>
+        {% for comment in comments %}
+        <div class="comment" id="comment-{{ comment.id }}">
+            <div class="comment-content" id="comment-content-{{ comment.id }}">
+                {{ comment.content }}
+            </div>
+            
+            <form class="edit-comment-form" id="edit-form-{{ comment.id }}" style="display: none;">
+                {% csrf_token %}
+                <textarea name="content">{{ comment.content }}</textarea>
+                <div class="edit-buttons">
+                    <button type="button" class="save-btn" onclick="saveComment({{ comment.id }})">Save</button>
+                    <button type="button" class="cancel-btn" onclick="cancelEdit({{ comment.id }})">Cancel</button>
+                </div>
+            </form>
+
+            <div class="comment-metadata">
+                <small>
+                    Author: {{ comment.user.username|default:"Anonymous" }} | 
+                    {{ comment.created_at|date:"Y-m-d H:i" }}
+                    {% if comment.updated_at and comment.updated_at != comment.created_at %}
+                        | Last edited: {{ comment.updated_at|date:"Y-m-d H:i" }}
+                    {% endif %}
+                </small>
+                
+                <div class="comment-actions">
+                    {% if user == comment.user or user.is_superuser %}
+                        <!-- Debug info -->
+                        <p style="color: red;">
+                            Comment ID: {{ comment.id }}<br>
+                            Generated URL: {% url 'edit_comment' comment.id %}
+                        </p>
+                        
+                        <a href="/comment/{{ comment.id }}/edit/" class="edit-btn" style="text-decoration: none;">Edit</a>
+                    {% endif %}
+                    
+                    <div class="vote-buttons">
       <div class="mt-8">
         <h3 class="text-lg font-semibold mb-4">Comments ({{ comments.count }})</h3>
         <div class="space-y-4">
@@ -54,3 +92,70 @@
     </div>
   </div>
 </div>
+
+<!-- Add the JavaScript at the end -->
+<script>
+(function() {  // Wrap in IIFE to avoid global namespace pollution
+    // Get the closest CSRF token to this instance
+    function getCSRFToken(commentId) {
+        const form = document.getElementById(`edit-form-${commentId}`);
+        return form.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    window.editComment = function(commentId) {
+        const contentDiv = document.getElementById(`comment-content-${commentId}`);
+        const editForm = document.getElementById(`edit-form-${commentId}`);
+        const editBtn = document.getElementById(`edit-btn-${commentId}`);
+        
+        if (contentDiv && editForm && editBtn) {
+            contentDiv.style.display = 'none';
+            editForm.style.display = 'block';
+            editBtn.style.display = 'none';
+        }
+    };
+
+    window.cancelEdit = function(commentId) {
+        const contentDiv = document.getElementById(`comment-content-${commentId}`);
+        const editForm = document.getElementById(`edit-form-${commentId}`);
+        const editBtn = document.getElementById(`edit-btn-${commentId}`);
+        
+        if (contentDiv && editForm && editBtn) {
+            contentDiv.style.display = 'block';
+            editForm.style.display = 'none';
+            editBtn.style.display = 'inline-block';
+        }
+    };
+
+    window.saveComment = function(commentId) {
+        const form = document.getElementById(`edit-form-${commentId}`);
+        const content = form.querySelector('textarea').value;
+        const csrftoken = getCSRFToken(commentId);
+
+        fetch(`/comment/${commentId}/edit/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+            body: JSON.stringify({ content: content })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const contentDiv = document.getElementById(`comment-content-${commentId}`);
+                if (contentDiv) {
+                    contentDiv.textContent = content;
+                    window.cancelEdit(commentId);
+                    location.reload();
+                }
+            } else {
+                alert(data.message || 'Error updating comment');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating comment. Please try again.');
+        });
+    };
+})();
+</script>

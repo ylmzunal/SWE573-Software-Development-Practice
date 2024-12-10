@@ -1,0 +1,121 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'objects/css/post_form.css' %}">
+
+<body class="post-form-page">
+    <!-- Header -->
+    {% if not is_homepage %}
+    <header>
+        <a href="{% url 'post_details' post.id %}" class="back-link">Back to Post Details</a>
+    </header>
+    {% endif %}
+    
+    <div class="post-form-container">
+        <form method="POST" enctype="multipart/form-data" class="post-form" action="{% url 'edit_post' post.id %}">
+            {% csrf_token %}
+            <h2>Edit Post</h2>
+            
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="error-message">{{ form.title.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.content.id_for_label }}">Description</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <div class="error-message">{{ form.content.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="{{ form.material.id_for_label }}">Material</label>
+                    {{ form.material }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.size.id_for_label }}">Size (cm)</label>
+                    {{ form.size }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.color.id_for_label }}">Color</label>
+                    {{ form.color }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.shape.id_for_label }}">Shape</label>
+                    {{ form.shape }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.weight.id_for_label }}">Weight (gr)</label>
+                    {{ form.weight }}
+                </div>
+            </div>
+
+            <div class="form-group image-upload">
+                {% if post.image %}
+                <div class="current-image">
+                    <img src="{{ post.image.url }}" alt="Current image" class="preview-image">
+                    <p class="image-caption">Current image</p>
+                </div>
+                {% endif %}
+                <label for="{{ form.image.id_for_label }}">Update Image</label>
+                {{ form.image }}
+                <small class="help-text">Supported formats: JPG, PNG, GIF (max 5MB)</small>
+            </div>
+
+            <div class="button-group">
+                <a href="{% url 'post_details' post.id %}" class="cancel-btn">Cancel</a>
+                <button type="submit" class="submit-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</body>
+
+<style>
+/* Add to existing post_form.css or include here */
+.current-image {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.preview-image {
+    max-width: 200px;
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.image-caption {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 0.5rem;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+
+.cancel-btn {
+    padding: 0.5rem 1rem;
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+.cancel-btn:hover {
+    background-color: #5a6268;
+}
+</style>

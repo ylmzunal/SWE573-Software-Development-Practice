@@ -16,6 +16,8 @@ import spacy
 from SPARQLWrapper import SPARQLWrapper, JSON
 # from .utils import build_query_from_post, rank_wikidata_results
 # from .wikidata_utils import search_wikidata_nlp, build_attributes_for_sparql
+import json
+from django.contrib import messages
 
 
 logger = logging.getLogger(__name__)
@@ -181,7 +183,66 @@ def add_comment(request, post_id):
             Comment.objects.create(post=post, content=content, user=request.user)
         # Yorum eklendikten sonra detay sayfasına yönlendir
         return redirect('post_detail', post_id=post.id)
+
+@login_required
+def edit_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
     
+    # Check if user is authorized to edit
+    if post.author != request.user and not request.user.is_superuser:
+        return redirect('post_details', post_id=post_id)
+    
+    if request.method == 'POST':
+        form = PostForm(request.POST, request.FILES, instance=post)
+        if form.is_valid():
+            edited_post = form.save(commit=False)
+            edited_post.last_edited_by = request.user
+            edited_post.save()
+            form.save_m2m()  # Save many-to-many relationships (for tags)
+            return redirect('post_details', post_id=post_id)
+    else:
+        form = PostForm(instance=post)
+    
+    context = {
+        'form': form,
+        'post': post,
+        'is_homepage': False
+    }
+    
+    return render(request, 'objects/edit_post.html', context)
+
+@login_required
+def edit_comment(request, comment_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
+    
+    comment = get_object_or_404(Comment, id=comment_id)
+    
+    # Check if user is authorized to edit
+    if comment.user != request.user and not request.user.is_superuser:
+        return JsonResponse({'success': False, 'message': 'Not authorized to edit this comment'})
+    
+    try:
+        data = json.loads(request.body)
+        content = data.get('content', '').strip()
+        
+        if not content:
+            return JsonResponse({'success': False, 'message': 'Comment content cannot be empty'})
+        
+        comment.content = content
+        comment.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Comment updated successfully'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        })
+
+
 
 def get_wikidata_label(entity_id):
     """Given a Wikidata entity ID, fetch the label in English."""
@@ -506,3 +567,28 @@ def search_view(request):
 #         'post': post,
 #         'wikidata_results': wikidata_results,
 #     })
+
+@login_required
+def edit_comment_view(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    post = comment.post  # Get the associated post
+    
+    # Check if user is authorized to edit
+    if comment.user != request.user and not request.user.is_superuser:
+        messages.error(request, "You don't have permission to edit this comment.")
+        return redirect('post_details', post_id=post.id)
+    
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        if content:
+            comment.content = content.strip()
+            comment.save()
+            messages.success(request, 'Comment updated successfully!')
+            return redirect('post_details', post_id=post.id)
+    
+    context = {
+        'comment': comment,
+        'post': post,
+    }
+    
+    return render(request, 'objects/edit_comment.html', context)  # Note the template path change
