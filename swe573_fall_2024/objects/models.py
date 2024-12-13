@@ -62,6 +62,7 @@ class Post(models.Model):
     matched_object = models.TextField(blank=True, null=True)  # Sonuç: Tavsiye edilen nesne
     solved = models.BooleanField(default=False)
     solved_at = models.DateTimeField(null=True, blank=True)
+    description = models.TextField(default='Default description')
 
     def mark_as_solved(self):
         self.solved = True
@@ -189,3 +190,11 @@ class Achievement(models.Model):
 
 #     def __str__(self):
 #         return f"{self.user.username}'s Profile"
+
+class PostFeature(models.Model):
+    post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='features')
+    feature_type = models.CharField(max_length=20)  # 'material', 'color', or 'shape'
+    value = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ('post', 'feature_type', 'value')

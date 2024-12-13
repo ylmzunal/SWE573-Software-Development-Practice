@@ -2,26 +2,67 @@ from django import forms
 from .models import Post, Comment, Profile
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .utils import fetch_wikidata_options
 
-# Wikidata'dan çekilen seçenekler
-material_options = [(opt['id'], opt['label']) for opt in fetch_wikidata_options(property_id="P186", item_type="Q223557")]
-color_options = [(opt['id'], opt['label']) for opt in fetch_wikidata_options(item_type="Q1075")]  # Q1075 = Colors
-shape_options = [(opt['id'], opt['label']) for opt in fetch_wikidata_options(item_type="Q815741")]  # Q815741 = Shapes
+MATERIAL_CHOICES = [
+    ('', 'None'),  # Default option
+    ('Metal', 'Metal'),
+    ('Wood', 'Wood'),
+    ('Glass', 'Glass'),
+    ('Plastic', 'Plastic'),
+    ('Stone', 'Stone'),
+    ('Ceramic', 'Ceramic'),
+    ('Platinum', 'Platinum'),
+    ('Gold', 'Gold'),
+    ('Copper', 'Copper'),
+    ('Iron', 'Iron'),
+    ('Natural material', 'Natural material'),
+    ('Synthetic material', 'Synthetic material'),
+]
+
+COLOR_CHOICES = [
+    ('', 'None'),  # Default option
+    ('White', 'White'),
+    ('Black', 'Black'),
+    ('Red', 'Red'),
+    ('Blue', 'Blue'),
+    ('Green', 'Green'),
+    ('Yellow', 'Yellow'),
+    ('Purple', 'Purple'),
+    ('Orange', 'Orange'),
+    ('Pink', 'Pink'),
+    ('Brown', 'Brown'),
+    ('Gray', 'Gray'),
+]
+
+SHAPE_CHOICES = [
+    ('', 'None'),  # Default option
+    ('Rectangle', 'Rectangle'),
+    ('Square', 'Square'),
+    ('Circle', 'Circle'),
+    ('Triangle', 'Triangle'),
+    ('Oval', 'Oval'),
+    ('Sphere', 'Sphere'),
+    ('Pyramid', 'Pyramid'),
+    ('Cylinder', 'Cylinder'),
+    ('Hexagon', 'Hexagon'),
+    ('Pentagon', 'Pentagon'),
+    ('Octagon', 'Octagon'),
+    ('Cube', 'Cube'),
+]
 
 class PostForm(forms.ModelForm):
     material = forms.ChoiceField(
-        choices=[('', 'None')] + material_options,
+        choices=MATERIAL_CHOICES,
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     color = forms.ChoiceField(
-        choices=[('', 'None')] + color_options,
+        choices=COLOR_CHOICES,
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     shape = forms.ChoiceField(
-        choices=[('', 'None')] + shape_options,
+        choices=SHAPE_CHOICES,
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
@@ -42,41 +83,10 @@ class PostForm(forms.ModelForm):
             'content': forms.Textarea(attrs={'placeholder': 'Post Content'}),
         }
 
-
-        
-# class PostForm(forms.ModelForm):
-#     class Meta:
-#         model = Post
-#         exclude = ['author']
-#         fields = ['title', 'content', 'material', 'size', 'color', 'shape', 'weight', 'image']  # Formda kullanılacak alanlar
-#         widgets = {
-#             'title': forms.TextInput(attrs={'placeholder': 'Post Başlığı'}),
-#             'content': forms.Textarea(attrs={'placeholder': 'Post İçeriği'}),
-#             'material': forms.TextInput(attrs={'placeholder': 'Materyal'}),
-#             'size': forms.NumberInput(attrs={'placeholder': 'Boyut (cm)'}),
-#             'color': forms.TextInput(attrs={'placeholder': 'Renk'}),
-#             'shape': forms.TextInput(attrs={'placeholder': 'Şekil'}),
-#             'weight': forms.NumberInput(attrs={'placeholder': 'Ağırlık (kg)'}),
-#         }
-
-
-
-    # def __init__(self, *args, **kwargs):
-    #     self.user = kwargs.pop('user', None)  # Kullanıcıyı formdan al
-    #     super(PostForm, self).__init__(*args, **kwargs)
-
-    # def clean(self):
-    #     cleaned_data = super().clean()
-    #     if not self.user or not self.user.is_authenticated:
-    #         raise forms.ValidationError("Giriş yapmış olmanız gerekiyor.")
-    #     return cleaned_data
-
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['content']
-
-# forms.py
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -100,9 +110,8 @@ class RegistrationForm(forms.ModelForm):
         if password and password_confirm and password != password_confirm:
             self.add_error('password_confirm', "Passwords do not match")
         return cleaned_data
-    
 
-    class ProfileForm(forms.ModelForm):
-        class Meta:
-            model = Profile
-            fields = ['profile_picture']
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['profile_picture']

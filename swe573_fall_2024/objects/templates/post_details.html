@@ -80,9 +80,18 @@
 
                 <!-- Buttons group -->
                 <div class="button-group">
-                    <button class="btn search-button">Search Wikidata</button>
+                    <a href="{% url 'wikidata_search' %}?q={{ post.title }}" class="btn search-button">Search Wikidata</a>
                     <a href="{% url 'edit_post' post.id %}" class="btn search-button">Edit Post</a>
-                    <button class="btn search-button">Mark as Unsolved</button>
+                    <form method="POST" action="{% url 'mark_post_status' post.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn search-button">
+                            {% if post.solved %}
+                                Mark as Unsolved
+                            {% else %}
+                                Mark as Solved
+                            {% endif %}
+                        </button>
+                    </form>
                 </div>
 
                 <p>Author: {{ post.author }} | {{ post.created_at|date:"Y-m-d H:i" }} | Last edited: {{ post.updated_at|date:"Y-m-d H:i" }} | Answers: {{ post.comment_set.count }}</p>
@@ -154,15 +163,14 @@
             </div>
 
             <!-- Right side: Properties -->
-            <div class="post-properties">
-                <h2>Properties</h2>
-                <ul>
-                    <li><strong>Material:</strong> {{ post.material|default:"None" }}</li>
-                    <li><strong>Size (cm):</strong> {{ post.size|default:"None" }}</li>
-                    <li><strong>Color:</strong> {{ post.color|default:"None" }}</li>
-                    <li><strong>Shape:</strong> {{ post.shape|default:"None" }}</li>
-                    <li><strong>Weight (gr):</strong> {{ post.weight|default:"None" }}</li>
-                </ul>
+            <div class="properties-section">
+                <h2 class="properties-title">Properties</h2>
+                
+                <p class="property-line">Material: {{ material }}</p>
+                <p class="property-line">Size (cm): {{ post.size }}</p>
+                <p class="property-line">Color: {{ color }}</p>
+                <p class="property-line">Shape: {{ shape }}</p>
+                <p class="property-line">Weight (gr): {{ post.weight }}</p>
             </div>
         </div>
     </div>

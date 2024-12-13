@@ -1,0 +1,47 @@
+.search-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.search-form {
+    margin-bottom: 30px;
+    display: flex;
+    gap: 10px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.result-item {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.result-item h3 {
+    margin: 0 0 10px 0;
+    color: #6c9f3a;
+}
+
+.entity-id {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.view-link {
+    display: inline-block;
+    margin-top: 10px;
+    color: #6c9f3a;
+    text-decoration: none;
+}
+
+.view-link:hover {
+    text-decoration: underline;
+} 

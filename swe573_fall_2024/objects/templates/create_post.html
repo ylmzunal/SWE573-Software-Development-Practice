@@ -1,0 +1,50 @@
+<form method="post">
+    {% csrf_token %}
+    {{ post_form.as_p }}
+    
+    <h3>Features</h3>
+    {{ feature_formset.management_form }}
+    <div id="feature-forms">
+        {% for feature_form in feature_formset %}
+            <div class="feature-form">
+                {{ feature_form.as_p }}
+                {% if not forloop.first %}
+                    <button type="button" class="remove-feature">Remove</button>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    <button type="button" id="add-feature">Add More Features</button>
+    
+    <button type="submit">Create Post</button>
+</form>
+
+<script>
+document.getElementById('add-feature').addEventListener('click', function() {
+    const formCount = document.getElementById('id_form-TOTAL_FORMS');
+    const formNum = parseInt(formCount.value);
+    const newForm = document.querySelector('.feature-form').cloneNode(true);
+    
+    // Update form index
+    newForm.innerHTML = newForm.innerHTML.replace(/form-0/g, `form-${formNum}`);
+    newForm.innerHTML = newForm.innerHTML.replace(/form\[0\]/g, `form[${formNum}]`);
+    
+    // Add remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'remove-feature';
+    removeBtn.textContent = 'Remove';
+    newForm.appendChild(removeBtn);
+    
+    document.getElementById('feature-forms').appendChild(newForm);
+    formCount.value = formNum + 1;
+});
+
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-feature')) {
+        e.target.parentElement.remove();
+        const formCount = document.getElementById('id_form-TOTAL_FORMS');
+        formCount.value = parseInt(formCount.value) - 1;
+    }
+});
+</script> 

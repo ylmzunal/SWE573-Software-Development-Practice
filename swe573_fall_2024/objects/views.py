@@ -2,8 +2,8 @@ import requests
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from .models import Post, Comment, Object, Profile
-from .forms import PostForm, CommentForm,  RegistrationForm, RegisterForm
+from .models import Post, Comment, Object, Profile, PostFeature
+from .forms import PostForm, CommentForm, RegistrationForm, RegisterForm
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count
@@ -159,23 +159,38 @@ def post_list_ajax(request):
 
 def post_details(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    comments = post.comments.order_by('created_at')
-    results = find_object_from_post(post_id)
+    comments = post.comments.all()
 
-    # Mantığı burada belirleyin
-    can_mark_as_solved = (
-        request.user.is_authenticated and
-        (post.author == request.user or request.user.is_superuser) and
-        not post.solved
-    )
+    if request.method == 'POST':
+        if 'mark_solved' in request.POST and not post.solved:
+            if request.user == post.author or request.user.is_superuser:
+                post.solved = True
+                post.save()
+                messages.success(request, 'Post marked as solved!')
+                return redirect('post_details', post_id=post_id)
+        elif request.user.is_authenticated:
+            content = request.POST.get('content', '').strip()
+            if content:
+                Comment.objects.create(
+                    post=post,
+                    user=request.user,
+                    content=content
+                )
+                return redirect('post_details', post_id=post_id)
 
-    return render(request, 'post_details.html', {
+    object_info = find_object_from_post(post_id)
+    print(f"find_object_from_post function is called with post_id: {post_id}")
+
+    context = {
         'post': post,
         'comments': comments,
-        'keywords': results['keywords'],  
-        'can_mark_as_solved': can_mark_as_solved,
-        'is_homepage': False  # For standalone page
-    })
+        'object_info': object_info,
+    }
+    
+    if request.user.is_authenticated and not post.solved and (request.user == post.author or request.user.is_superuser):
+        context['can_mark_solved'] = True
+    
+    return render(request, 'post_details.html', context)
 
 def post_details_partial(request, post_id):
     post = get_object_or_404(Post, id=post_id)
@@ -270,16 +285,30 @@ def edit_comment(request, comment_id):
 
 
 
-def get_wikidata_label(entity_id):
-    """Given a Wikidata entity ID, fetch the label in English."""
-    url = f"https://www.wikidata.org/wiki/Special:EntityData/{entity_id}.json"
-    response = requests.get(url)
-    if response.status_code == 200:
+def get_wikidata_label(qid):
+    if not qid or not qid.startswith('Q'):
+        return None
+        
+    url = f"https://www.wikidata.org/w/api.php"
+    params = {
+        'action': 'wbgetentities',
+        'ids': qid,
+        'format': 'json',
+        'props': 'labels',
+        'languages': 'en'
+    }
+    
+    try:
+        response = requests.get(url, params=params)
         data = response.json()
-        entities = data.get("entities", {})
-        label = entities.get(entity_id, {}).get("labels", {}).get("en", {}).get("value", "Unknown")
-        return label
-    return "Unknown"
+        
+        if 'entities' in data and qid in data['entities']:
+            entity = data['entities'][qid]
+            if 'labels' in entity and 'en' in entity['labels']:
+                return entity['labels']['en']['value']
+    except:
+        return None
+    return None
 
 
 # def add_comment(request, post_id):
@@ -629,4 +658,63 @@ def edit_comment_view(request, comment_id):
         'comment': comment,
         'post': post  # Add post to context
     })
+
+@login_required
+def mark_post_status(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    
+    # Check if user is the author of the post
+    if request.user == post.author:
+        post.solved = not post.solved  # Toggle the solved status
+        post.save()
+    
+    return redirect('post_detail', post_id=post_id)
+
+def wikidata_search(request):
+    query = request.GET.get('q', '')
+    results = []
+    
+    if query:
+        url = "https://www.wikidata.org/w/api.php"
+        params = {
+            'action': 'wbsearchentities',
+            'format': 'json',
+            'language': 'en',
+            'search': query,
+            'limit': 10
+        }
+        
+        try:
+            response = requests.get(url, params=params)
+            data = response.json()
+            results = data.get('search', [])
+        except:
+            results = []
+    
+    return render(request, 'wikidata_search.html', {
+        'query': query,
+        'results': results
+    })
+
+def post_detail(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    
+    # Extract Q-IDs from the URLs
+    material_qid = post.material.split('/')[-1] if post.material else None
+    color_qid = post.color.split('/')[-1] if post.color else None
+    shape_qid = post.shape.split('/')[-1] if post.shape else None
+    
+    # Get labels for each property
+    material = get_wikidata_label(material_qid) or "Not specified"
+    color = get_wikidata_label(color_qid) or "Not specified"
+    shape = get_wikidata_label(shape_qid) or "Not specified"
+    
+    context = {
+        'post': post,
+        'material': material,
+        'color': color,
+        'shape': shape,
+    }
+    
+    return render(request, 'post_details.html', context)
 

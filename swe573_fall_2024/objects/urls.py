@@ -29,6 +29,7 @@ urlpatterns = [
     path('update-bio/', views.update_bio, name='update_bio'),
     # path('post/<int:post_id>/analyze/', views.analyze_post, name='analyze_post'),
     path('post/<int:post_id>/edit/', views.edit_post, name='edit_post'),
+    path('post/<int:post_id>/mark-status/', views.mark_post_status, name='mark_post_status'),
 ]
 
 
