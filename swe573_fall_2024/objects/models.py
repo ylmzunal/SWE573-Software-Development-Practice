@@ -8,7 +8,7 @@ class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
-        return self.name
+        return f'Comment by {self.user.username} on {self.created_at}'
 
 class Object(models.Model):
     name = models.CharField(max_length=255, default="Unnamed Object")

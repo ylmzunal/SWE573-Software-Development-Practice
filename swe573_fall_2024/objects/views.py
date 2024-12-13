@@ -52,23 +52,49 @@ def homepage(request):
 
 @login_required
 def profile_view(request, username):
-    user = get_object_or_404(User, username=username)
-
-    # Fetch user-related data
-    posts = Post.objects.filter(author=user)
-    comments = Comment.objects.filter(user=user)
+    user_profile = get_object_or_404(User, username=username)
+    posts = Post.objects.filter(author=user_profile).order_by('-created_at')
+    comments = Comment.objects.filter(user=user_profile).order_by('-created_at')
+    
+    # Calculate statistics
+    total_posts = posts.count()
+    total_comments = comments.count()
+    total_upvotes = sum(comment.upvotes or 0 for comment in comments)
+    total_downvotes = sum(comment.downvotes or 0 for comment in comments)
+    
+    # Calculate badges
+    badges = []
+    if total_posts >= 5:
+        badges.append("Active Poster 🌟")
+    if total_comments >= 10:
+        badges.append("Helpful Commenter 💬")
+    if total_upvotes >= 10:
+        badges.append("Popular Contributor 👍")
+    
+    # Calculate achievements
+    solved_posts = posts.filter(solved=True)
+    solved_posts_count = solved_posts.count()
+    achievements = [
+        {
+            'title': 'Problem Solver',
+            'description': f'Solved {solved_posts_count} posts',
+            'icon': '✓'
+        }
+    ]
 
     context = {
-        'user_profile': user,
-        'bio': user.profile.bio if hasattr(user, 'profile') else 'No bio available.',
-        'total_posts': posts.count(),
-        'total_comments': comments.count(),
-        'upvotes': sum(post.upvotes for post in posts),  # Assuming 'upvotes' is a field in Post
-        'downvotes': sum(post.downvotes for post in posts),  # Assuming 'downvotes' is a field in Post
-        'badges': user.profile.badges.all() if hasattr(user, 'profile') and user.profile.badges else ['No badges yet.'],
-        'achievements': user.profile.achievements if hasattr(user, 'profile') and user.profile.achievements else ['No achievements yet.'],
+        'user_profile': user_profile,
         'posts': posts,
+        'total_posts': total_posts,
+        'total_comments': total_comments,
+        'total_upvotes': total_upvotes,
+        'total_downvotes': total_downvotes,
+        'bio': user_profile.profile.bio if hasattr(user_profile, 'profile') else None,
+        'badges': badges,
+        'achievements': achievements,
+        'solved_posts_count': solved_posts_count,
     }
+    
     return render(request, 'profile.html', context)
 
 
@@ -272,51 +298,59 @@ def get_wikidata_label(entity_id):
 
 
 
+@login_required
 def vote_comment(request, comment_id, vote_type):
-    try:
-        comment = Comment.objects.get(id=comment_id)
+    if request.method == 'POST':
+        comment = get_object_or_404(Comment, id=comment_id)
+        user = request.user
         
-        if comment.post.solved:
-            return JsonResponse({
-                'success': False,
-                'message': 'Cannot vote on comments in solved posts'
-            }, status=400)
-
+        # Get current vote counts
+        upvotes = comment.upvotes or 0
+        downvotes = comment.downvotes or 0
+        
+        # Store previous vote state to determine if we're toggling
+        was_upvoted = False
+        was_downvoted = False
+        
         if vote_type == 'upvote':
-            # Increment upvotes
-            if not hasattr(comment, 'upvotes') or comment.upvotes is None:
-                comment.upvotes = 0
-            comment.upvotes += 1
-        elif vote_type == 'downvote':
-            # Increment downvotes
-            if not hasattr(comment, 'downvotes') or comment.downvotes is None:
-                comment.downvotes = 0
-            comment.downvotes += 1
-        else:
-            return JsonResponse({
-                'success': False,
-                'message': 'Invalid vote type'
-            }, status=400)
+            if comment.upvotes and comment.upvotes > 0:
+                # If already upvoted, remove the upvote
+                comment.upvotes = comment.upvotes - 1
+                was_upvoted = True
+            else:
+                # Add new upvote
+                comment.upvotes = (comment.upvotes or 0) + 1
+                # Remove downvote if exists
+                if comment.downvotes and comment.downvotes > 0:
+                    comment.downvotes = comment.downvotes - 1
+        else:  # downvote
+            if comment.downvotes and comment.downvotes > 0:
+                # If already downvoted, remove the downvote
+                comment.downvotes = comment.downvotes - 1
+                was_downvoted = True
+            else:
+                # Add new downvote
+                comment.downvotes = (comment.downvotes or 0) + 1
+                # Remove upvote if exists
+                if comment.upvotes and comment.upvotes > 0:
+                    comment.upvotes = comment.upvotes - 1
         
         comment.save()
         
         return JsonResponse({
             'success': True,
-            'upvotes': comment.upvotes,
-            'downvotes': comment.downvotes
+            'upvotes': comment.upvotes or 0,
+            'downvotes': comment.downvotes or 0,
+            'userVoteStatus': {
+                'hasUpvoted': vote_type == 'upvote' and not was_upvoted,
+                'hasDownvoted': vote_type == 'downvote' and not was_downvoted
+            }
         })
-        
-    except Comment.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'message': 'Comment not found'
-        }, status=404)
-    except Exception as e:
-        print(f"Error in vote_comment: {str(e)}")  # For debugging
-        return JsonResponse({
-            'success': False,
-            'message': 'Error processing vote'
-        }, status=500)
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method'
+    }, status=400)
 
 
 
@@ -324,14 +358,28 @@ def vote_comment(request, comment_id, vote_type):
 def mark_as_solved(request, post_id):
     if request.method == 'POST':
         post = get_object_or_404(Post, id=post_id)
-
-        # Yalnızca post sahibi veya admin işaretleyebilir
-        if post.author == request.user or request.user.is_superuser:
-            post.solved = True
-            post.save()
-            return JsonResponse({'success': True, 'message': 'Post marked as solved.'})
-        return JsonResponse({'success': False, 'message': 'You are not authorized to mark this post as solved.'}, status=403)
-    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=400)
+        
+        # Only allow the post author to mark as solved/unsolved
+        if request.user != post.author:
+            return JsonResponse({
+                'success': False,
+                'message': 'Only the post author can mark this post as solved or unsolved.'
+            }, status=403)
+        
+        # Toggle the solved status
+        post.solved = not post.solved
+        post.save()
+        
+        return JsonResponse({
+            'success': True,
+            'solved': post.solved,
+            'message': f'Post has been marked as {"solved" if post.solved else "unsolved"}!'
+        })
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method.'
+    }, status=400)
 
 
 @login_required
@@ -566,29 +614,19 @@ def search_view(request):
 #     return render(request, 'post_analysis.html', {
 #         'post': post,
 #         'wikidata_results': wikidata_results,
-#     })
-
-@login_required
+#     })@login_required
 def edit_comment_view(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
-    post = comment.post  # Get the associated post
-    
-    # Check if user is authorized to edit
-    if comment.user != request.user and not request.user.is_superuser:
-        messages.error(request, "You don't have permission to edit this comment.")
-        return redirect('post_details', post_id=post.id)
     
     if request.method == 'POST':
-        content = request.POST.get('content')
+        content = request.POST.get('content', '').strip()
         if content:
-            comment.content = content.strip()
+            comment.content = content
             comment.save()
-            messages.success(request, 'Comment updated successfully!')
-            return redirect('post_details', post_id=post.id)
+            return redirect('post_details', post_id=post.id)  # Use post.id for redirect
     
-    context = {
+    return render(request, 'objects/edit_comment.html', {
         'comment': comment,
-        'post': post,
-    }
-    
-    return render(request, 'objects/edit_comment.html', context)  # Note the template path change
+        'post': post  # Add post to context
+    })
+

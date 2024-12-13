@@ -16,24 +16,6 @@
                 <a href="{% url 'homepage' %}" style="text-decoration: none; color: inherit;">
                     <h1>Object Finder</h1>
                 </a>
-                <span class="brand-tagline">Find and Identify Objects</span>
-            </div>
-            
-            <div class="nav-section">
-                <nav class="nav-links">
-                    {% if user.is_authenticated %}
-                        <div class="user-menu">
-                            <form method="post" action="{% url 'logout' %}" class="logout-form">
-                                {% csrf_token %}
-                                <button type="submit" class="btn logout-btn">Logout</button>
-                            </form>
-                            <a href="{% url 'profile' user.username %}" class="user-link">
-                                <span class="user-avatar">{{ user.username|slice:":1" }}</span>
-                                <span class="username">{{ user.username }}</span>
-                            </a>
-                        </div>
-                    {% endif %}
-                </nav>
             </div>
         </div>
     </header>
@@ -44,8 +26,7 @@
             <form method="POST" class="edit-form">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label for="content">Comment Content:</label>
-                    <textarea id="content" name="content" class="comment-textarea" required>{{ comment.content }}</textarea>
+                    <textarea name="content" class="comment-textarea" required>{{ comment.content }}</textarea>
                 </div>
                 <div class="button-group">
                     <button type="submit" class="save-btn">Save Changes</button>

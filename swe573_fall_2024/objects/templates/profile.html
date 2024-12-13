@@ -53,11 +53,11 @@
                         <span class="stat-label">Comments</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value">{{ upvotes }}</span>
+                        <span class="stat-value">{{ total_upvotes }}</span>
                         <span class="stat-label">Upvotes</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value">{{ downvotes }}</span>
+                        <span class="stat-value">{{ total_downvotes }}</span>
                         <span class="stat-label">Downvotes</span>
                     </div>
                 </div>
@@ -66,17 +66,28 @@
             <!-- Badges & Achievements -->
             <div class="card">
                 <div class="tabs">
-                    <button class="tab active">Badges ({{ badges|length }})</button>
-                    <button class="tab">Achievements ({{ achievements|length }})</button>
+                    <button class="tab active" onclick="switchTab('badges')">Badges</button>
+                    <button class="tab" onclick="switchTab('achievements')">Achievements</button>
                 </div>
                 <div class="tab-content">
-                    <div class="badges-grid">
+                    <div id="badges-content" class="badges-grid" style="display: block;">
                         {% if badges %}
                             {% for badge in badges %}
                                 <div class="badge-item">{{ badge }}</div>
                             {% endfor %}
                         {% else %}
                             <p>No badges yet.</p>
+                        {% endif %}
+                    </div>
+                    <div id="achievements-content" class="achievements-grid" style="display: none;">
+                        {% if achievements %}
+                            {% for achievement in achievements %}
+                                <div class="badge-item">
+                                    {{ achievement.icon }} {{ achievement.title }}: {{ achievement.description }}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p>No achievements yet.</p>
                         {% endif %}
                     </div>
                 </div>
@@ -106,7 +117,6 @@
     </div>
 </div>
 
-
 <script>
 function toggleBioEdit() {
     const bioDisplay = document.getElementById('bio-display');
@@ -129,7 +139,7 @@ function saveBio() {
     const bioText = bioForm.querySelector('textarea[name="bio"]').value;
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-    fetch('/update-bio/', {  // Updated URL
+    fetch('/update-bio/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -156,4 +166,31 @@ function saveBio() {
         alert('Error updating bio');
     });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all tab buttons
+    const tabButtons = document.querySelectorAll('.tabs .tab');
+    
+    // Add click event listeners to each tab
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all tabs
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            // Show corresponding content
+            const badgesContent = document.getElementById('badges-content');
+            const achievementsContent = document.getElementById('achievements-content');
+            
+            if (this.textContent === 'Badges') {
+                badgesContent.style.display = 'block';
+                achievementsContent.style.display = 'none';
+            } else {
+                badgesContent.style.display = 'none';
+                achievementsContent.style.display = 'block';
+            }
+        });
+    });
+});
 </script>

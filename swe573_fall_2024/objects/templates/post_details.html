@@ -5,15 +5,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Finder</title>
     <link rel="stylesheet" href="{% static 'objects/css/post_details.css' %}">
-    <title>{{ post.title }}</title>
 </head>
 <body class="post-details-page">
     <!-- Header -->
     {% if not is_homepage %}
     <header>
-        <a href="{% url 'homepage' %}">Object Finder</a>
-        <h1>Post Details</h1>
+        <div class="header-container">
+            <!-- Brand Section -->
+            <a href="{% url 'homepage' %}" class="brand">
+                <h1>Object Finder</h1>
+                <span class="brand-tagline">Find and Identify Objects</span>
+            </a>
+    
+            <!-- Navigation Section -->
+            <div class="nav-section">
+                <div class="search-bar">
+                    <form method="get" action="{% url 'wikidata_search' %}">
+                        <input type="text" name="q" placeholder="Search Wikidata" class="search-input">
+                        <button class="search-button">
+                            Search
+                        </button>
+                    </form>
+                </div>
+                <nav class="nav-links">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'create_post' %}" class="btn create-post-btn">Create New Post</a>
+                        <div class="user-menu">
+                            <form method="post" action="{% url 'logout' %}" class="logout-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn logout-btn">Logout</button>
+                            </form>
+                            <a href="{% url 'profile' user.username %}" class="user-link">
+                                <span class="user-avatar">{{ user.username|slice:":1" }}</span>
+                                <span class="username">{{ user.username }}</span>
+                            </a>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn login-btn">Login</a>
+                        <a href="{% url 'register' %}" class="btn register-btn">Register</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
     </header>
     {% endif %}
 
@@ -26,32 +61,31 @@
         <div id="post-details">
             <!-- Left side: Post and Comments -->
             <div class="post-content">
-                <h2>{{ post.title }}</h2>
+                <h2>
+                    <a href="{% url 'post_details' post.id %}" style="
+                        color: #2c3e50;
+                        text-decoration: none;
+                        transition: color 0.3s ease;
+                        cursor: pointer;">
+                        {{ post.title }}
+                    </a>
+                </h2>
+                {% if post.solved %}
+                    <div class="solved-status">✓ Solved</div>
+                {% endif %}
                 <p>{{ post.content }}</p>
                 {% if post.image %}
                 <img src="{{ post.image.url }}" alt="{{ post.title }}">
                 {% endif %}
 
-                <!-- Butonlar ve Metadata -->
+                <!-- Buttons group -->
                 <div class="button-group">
-                    <form action="{% url 'search_results' %}" method="GET">
-                        <input type="hidden" name="q" value="{% if post.material %}{{ post.material }} {% endif %}{% if post.size %}{{ post.size }}cm {% endif %}{% if post.color %}{{ post.color }} {% endif %}{% if post.shape %}{{ post.shape }} {% endif %}{% if post.weight %}{{ post.weight }}kg{% endif %}">
-                        <button type="submit">Search Wikidata</button>
-                    </form>
-
-                    {% if user == post.author or user.is_superuser %}
-                        <a href="{% url 'edit_post' post.id %}" class="btn btn-primary">Edit Post</a>
-                    {% endif %}
+                    <button class="btn search-button">Search Wikidata</button>
+                    <a href="{% url 'edit_post' post.id %}" class="btn search-button">Edit Post</a>
+                    <button class="btn search-button">Mark as Unsolved</button>
                 </div>
 
-                <small>
-                    Author: {{ post.author.username }} | 
-                    {{ post.created_at|date:"Y-m-d H:i" }}
-                    {% if post.updated_at and post.updated_at != post.created_at %}
-                        | Last edited: {{ post.updated_at|date:"Y-m-d H:i" }}
-                    {% endif %}
-                    | Answers: {{ comments|length }}
-                </small>
+                <p>Author: {{ post.author }} | {{ post.created_at|date:"Y-m-d H:i" }} | Last edited: {{ post.updated_at|date:"Y-m-d H:i" }} | Answers: {{ post.comment_set.count }}</p>
 
                 <!-- Comments section below post content -->
                 <div id="comments-section">
@@ -62,16 +96,6 @@
                             {{ comment.content }}
                         </div>
                         
-                        <!-- Add edit form (hidden by default) -->
-                        <form class="edit-comment-form" id="edit-form-{{ comment.id }}" style="display: none;">
-                            {% csrf_token %}
-                            <textarea name="content">{{ comment.content }}</textarea>
-                            <div class="edit-buttons">
-                                <button type="button" class="save-btn" onclick="saveComment({{ comment.id }})">Save</button>
-                                <button type="button" class="cancel-btn" onclick="cancelEdit({{ comment.id }})">Cancel</button>
-                            </div>
-                        </form>
-
                         <small>
                             Author: {{ comment.user.username|default:"Anonymous" }} | 
                             {{ comment.created_at|date:"Y-m-d H:i" }}
@@ -81,24 +105,32 @@
                         </small>
                         
                         <div class="comment-actions">
-                            {% if user == comment.user or user.is_superuser %}
-                                <button onclick="editComment({{ comment.id }})" class="edit-btn">Edit</button>
-                            {% endif %}
-                            
                             <div class="vote-buttons">
                                 {% if user.is_authenticated %}
-                                    <button onclick="handleVote({{ comment.id }}, 'upvote')" class="vote-btn">
-                                        <span>👍</span>
+                                    <button onclick="handleVote({{ comment.id }}, 'upvote')" class="vote-btn" style="
+                                        background: none;
+                                        border: none;
+                                        cursor: pointer;
+                                        font-size: 1.2em;
+                                        padding: 0 5px;
+                                        color: #6c9f3a;">
+                                        <span>↑</span>
                                         <span id="upvotes-{{ comment.id }}">{{ comment.upvotes|default:0 }}</span>
                                     </button>
-                                    <button onclick="handleVote({{ comment.id }}, 'downvote')" class="vote-btn">
-                                        <span>👎</span>
+                                    <button onclick="handleVote({{ comment.id }}, 'downvote')" class="vote-btn" style="
+                                        background: none;
+                                        border: none;
+                                        cursor: pointer;
+                                        font-size: 1.2em;
+                                        padding: 0 5px;
+                                        color: #6c9f3a;">
+                                        <span>↓</span>
                                         <span id="downvotes-{{ comment.id }}">{{ comment.downvotes|default:0 }}</span>
                                     </button>
                                 {% else %}
                                     <div class="vote-display">
-                                        <span>👍 {{ comment.upvotes|default:0 }}</span>
-                                        <span>👎 {{ comment.downvotes|default:0 }}</span>
+                                        <span style="color: #6c9f3a;">↑ {{ comment.upvotes|default:0 }}</span>
+                                        <span style="color: #6c9f3a;">↓ {{ comment.downvotes|default:0 }}</span>
                                         <small>(Login to vote)</small>
                                     </div>
                                 {% endif %}
@@ -140,10 +172,9 @@
 
 <script>
     function handleVote(commentId, voteType) {
-        // Get CSRF token from cookie
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         
-        fetch(`/comment/${commentId}/vote/${voteType}/`, {
+        fetch(`/vote/comment/${commentId}/${voteType}/`, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrftoken,
@@ -153,7 +184,7 @@
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error('Response not ok');
+                throw new Error('Network response was not ok');
             }
             return response.json();
         })
@@ -163,12 +194,12 @@
                 document.getElementById(`upvotes-${commentId}`).textContent = data.upvotes;
                 document.getElementById(`downvotes-${commentId}`).textContent = data.downvotes;
             } else {
-                alert(data.message || 'Error voting');
+                alert(data.message || 'Error processing vote');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error voting. Please try again.');
+            alert('Error processing vote. Please try again.');
         });
     }
 
@@ -176,87 +207,40 @@
 
 
 <script>
-document.getElementById('mark-as-solved-btn').addEventListener('click', function() {
-    fetch('{% url "mark_as_solved" post.id %}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{% csrf_token %}'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Update the UI to reflect that the post is solved
-            // For example, you can disable the "Mark as Solved" button
-            document.getElementById('mark-as-solved-btn').disabled = true;
-            alert(data.message);
-        } else {
-            alert(data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error marking post as solved:', error);
-        alert('An error occurred while marking the post as solved.');
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    const solvedBtn = document.getElementById('mark-as-solved-btn');
+    if (solvedBtn) {
+        solvedBtn.addEventListener('click', function() {
+            // Get CSRF token from the cookie
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch('{% url "mark_as_solved" post.id %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Error marking post as solved');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error marking post as solved. Please try again.');
+            });
+        });
+    }
 });
-</script>
-
-
-<script>
-function editComment(commentId) {
-    console.log('Edit button clicked for comment:', commentId); // Debug log
-    // Hide content and show edit form
-    document.getElementById(`comment-content-${commentId}`).style.display = 'none';
-    document.getElementById(`edit-form-${commentId}`).style.display = 'block';
-}
-
-function cancelEdit(commentId) {
-    console.log('Cancel edit for comment:', commentId); // Debug log
-    // Show content and hide edit form
-    document.getElementById(`comment-content-${commentId}`).style.display = 'block';
-    document.getElementById(`edit-form-${commentId}`).style.display = 'none';
-}
-
-function saveComment(commentId) {
-    console.log('Saving comment:', commentId); // Debug log
-    const form = document.getElementById(`edit-form-${commentId}`);
-    const content = form.querySelector('textarea').value;
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    console.log('CSRF Token:', csrftoken); // Debug log
-    console.log('Content:', content); // Debug log
-
-    fetch(`/comment/${commentId}/edit/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken,
-        },
-        body: JSON.stringify({ content: content })
-    })
-    .then(response => {
-        console.log('Response status:', response.status); // Debug log
-        return response.json();
-    })
-    .then(data => {
-        console.log('Response data:', data); // Debug log
-        if (data.success) {
-            // Update the comment content
-            document.getElementById(`comment-content-${commentId}`).textContent = content;
-            // Hide the edit form
-            cancelEdit(commentId);
-            // Optionally update the last edited timestamp
-            location.reload(); // Refresh to show updated timestamp
-        } else {
-            alert(data.message || 'Error updating comment');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error updating comment. Please try again.');
-    });
-}
 </script>
 
 

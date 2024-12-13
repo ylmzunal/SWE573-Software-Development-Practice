@@ -2,9 +2,16 @@
 
 <div class="bg-white rounded-lg shadow-sm p-6">
   <div class="flex justify-between items-start mb-4">
-    <h1 class="text-2xl font-bold">{{ post.title }}</h1>
+    <h1 class="text-2xl font-bold">
+      <a href="{% url 'post_details' post.id %}" style="
+          color: #2c3e50;
+          text-decoration: none;
+          transition: color 0.3s ease;">
+        {{ post.title }}
+      </a>
+    </h1>
     {% if post.solved %}
-      <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">Solved</span>
+      <span class="solved-status">✓ Solved</span>
     {% endif %}
   </div>
 
@@ -24,61 +31,49 @@
       </div>
 
       <!-- Comments section -->
-      <div id="comments-section">
-        <h3>Comments</h3>
-        {% for comment in comments %}
-        <div class="comment" id="comment-{{ comment.id }}">
-            <div class="comment-content" id="comment-content-{{ comment.id }}">
-                {{ comment.content }}
+      {% for comment in post.comments.all %}
+        <div class="comment">
+          <div class="comment-content">{{ comment.content }}</div>
+          <div class="comment-meta">
+            <div class="comment-actions">
+              <div class="vote-buttons">
+                {% if user.is_authenticated %}
+                  <button onclick="handleVote({{ comment.id }}, 'upvote')" class="vote-btn" style="
+                      background: none;
+                      border: none;
+                      cursor: pointer;
+                      font-size: 1.2em;
+                      padding: 0 5px;
+                      color: #6c9f3a;">
+                      <span>↑</span>
+                      <span id="upvotes-{{ comment.id }}">{{ comment.upvotes|default:0 }}</span>
+                  </button>
+                  <button onclick="handleVote({{ comment.id }}, 'downvote')" class="vote-btn" style="
+                      background: none;
+                      border: none;
+                      cursor: pointer;
+                      font-size: 1.2em;
+                      padding: 0 5px;
+                      color: #6c9f3a;">
+                      <span>↓</span>
+                      <span id="downvotes-{{ comment.id }}">{{ comment.downvotes|default:0 }}</span>
+                  </button>
+                {% else %}
+                  <div class="vote-display">
+                    <span style="color: #6c9f3a;">↑ {{ comment.upvotes|default:0 }}</span>
+                    <span style="color: #6c9f3a;">↓ {{ comment.downvotes|default:0 }}</span>
+                    <small>(Login to vote)</small>
+                  </div>
+                {% endif %}
+              </div>
             </div>
-            
-            <form class="edit-comment-form" id="edit-form-{{ comment.id }}" style="display: none;">
-                {% csrf_token %}
-                <textarea name="content">{{ comment.content }}</textarea>
-                <div class="edit-buttons">
-                    <button type="button" class="save-btn" onclick="saveComment({{ comment.id }})">Save</button>
-                    <button type="button" class="cancel-btn" onclick="cancelEdit({{ comment.id }})">Cancel</button>
-                </div>
-            </form>
-
-            <div class="comment-metadata">
-                <small>
-                    Author: {{ comment.user.username|default:"Anonymous" }} | 
-                    {{ comment.created_at|date:"Y-m-d H:i" }}
-                    {% if comment.updated_at and comment.updated_at != comment.created_at %}
-                        | Last edited: {{ comment.updated_at|date:"Y-m-d H:i" }}
-                    {% endif %}
-                </small>
-                
-                <div class="comment-actions">
-                    {% if user == comment.user or user.is_superuser %}
-                        <!-- Debug info -->
-                        <p style="color: red;">
-                            Comment ID: {{ comment.id }}<br>
-                            Generated URL: {% url 'edit_comment' comment.id %}
-                        </p>
-                        
-                        <a href="/comment/{{ comment.id }}/edit/" class="edit-btn" style="text-decoration: none;">Edit</a>
-                    {% endif %}
-                    
-                    <div class="vote-buttons">
-      <div class="mt-8">
-        <h3 class="text-lg font-semibold mb-4">Comments ({{ comments.count }})</h3>
-        <div class="space-y-4">
-          {% for comment in comments %}
-            <div class="bg-gray-50 p-4 rounded-lg">
-              <p>{{ comment.content }}</p>
-              <p class="text-sm text-gray-500 mt-2">
-                By {{ comment.user.username }} on {{ comment.created_at|date:"F j, Y" }}
-              </p>
-            </div>
-          {% empty %}
-            <p class="text-gray-500">No comments yet</p>
-          {% endfor %}
+            <span class="comment-author">{{ comment.user.username }}</span>
+            <span class="comment-date">{{ comment.created_at|date:"F j, Y" }}</span>
+          </div>
         </div>
-      </div>
+      {% endfor %}
     </div>
-
+    
     <!-- Properties sidebar -->
     <div class="bg-gray-50 p-4 rounded-lg h-fit">
       <h3 class="font-semibold mb-4">Properties</h3>
@@ -93,69 +88,47 @@
   </div>
 </div>
 
-<!-- Add the JavaScript at the end -->
+<!-- Add CSRF token -->
+{% csrf_token %}
+
+<!-- Add the voting script -->
 <script>
-(function() {  // Wrap in IIFE to avoid global namespace pollution
-    // Get the closest CSRF token to this instance
-    function getCSRFToken(commentId) {
-        const form = document.getElementById(`edit-form-${commentId}`);
-        return form.querySelector('[name=csrfmiddlewaretoken]').value;
-    }
-
-    window.editComment = function(commentId) {
-        const contentDiv = document.getElementById(`comment-content-${commentId}`);
-        const editForm = document.getElementById(`edit-form-${commentId}`);
-        const editBtn = document.getElementById(`edit-btn-${commentId}`);
-        
-        if (contentDiv && editForm && editBtn) {
-            contentDiv.style.display = 'none';
-            editForm.style.display = 'block';
-            editBtn.style.display = 'none';
+function handleVote(commentId, voteType) {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(`/vote/comment/${commentId}/${voteType}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
-    };
-
-    window.cancelEdit = function(commentId) {
-        const contentDiv = document.getElementById(`comment-content-${commentId}`);
-        const editForm = document.getElementById(`edit-form-${commentId}`);
-        const editBtn = document.getElementById(`edit-btn-${commentId}`);
-        
-        if (contentDiv && editForm && editBtn) {
-            contentDiv.style.display = 'block';
-            editForm.style.display = 'none';
-            editBtn.style.display = 'inline-block';
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Update vote counts
+            document.getElementById(`upvotes-${commentId}`).textContent = data.upvotes;
+            document.getElementById(`downvotes-${commentId}`).textContent = data.downvotes;
+            
+            // Update button colors based on user's vote status
+            const upButton = document.querySelector(`button[onclick="handleVote(${commentId}, 'upvote')"]`);
+            const downButton = document.querySelector(`button[onclick="handleVote(${commentId}, 'downvote')"]`);
+            
+            upButton.style.color = data.userVoteStatus.hasUpvoted ? '#2c5f13' : '#6c9f3a';
+            downButton.style.color = data.userVoteStatus.hasDownvoted ? '#2c5f13' : '#6c9f3a';
+        } else {
+            alert(data.message || 'Error processing vote');
         }
-    };
-
-    window.saveComment = function(commentId) {
-        const form = document.getElementById(`edit-form-${commentId}`);
-        const content = form.querySelector('textarea').value;
-        const csrftoken = getCSRFToken(commentId);
-
-        fetch(`/comment/${commentId}/edit/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken,
-            },
-            body: JSON.stringify({ content: content })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const contentDiv = document.getElementById(`comment-content-${commentId}`);
-                if (contentDiv) {
-                    contentDiv.textContent = content;
-                    window.cancelEdit(commentId);
-                    location.reload();
-                }
-            } else {
-                alert(data.message || 'Error updating comment');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error updating comment. Please try again.');
-        });
-    };
-})();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error processing vote. Please try again.');
+    });
+}
 </script>

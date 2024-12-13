@@ -29,9 +29,6 @@ urlpatterns = [
     path('update-bio/', views.update_bio, name='update_bio'),
     # path('post/<int:post_id>/analyze/', views.analyze_post, name='analyze_post'),
     path('post/<int:post_id>/edit/', views.edit_post, name='edit_post'),
-    path('edit-comment/<int:comment_id>/', views.edit_comment_view, name='edit_comment'),
-    path('comment/<int:comment_id>/edit/', views.edit_comment_view, name='edit_comment'),
-    path('edit-comment/<int:comment_id>/', views.edit_comment_view, name='edit_comment_alt'),
 ]
 
 

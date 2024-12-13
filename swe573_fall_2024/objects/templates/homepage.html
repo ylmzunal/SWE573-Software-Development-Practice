@@ -81,6 +81,7 @@
 
         <section class="main-content" id="main-content">
             <h2>Question Details</h2>
+            {% csrf_token %}
             <p>Select a post to see its details and comments.</p>
         </section>
     </main>
@@ -99,11 +100,9 @@
     
         // Function to load post details into the main-content section
         function loadPostDetails(postId) {
-            // Show loading indicator
             document.getElementById('main-content').innerHTML = 
                 '<div class="text-center p-8"><div>Loading...</div></div>';
             
-            // Fetch post details
             fetch(`/post/${postId}/details/`)
                 .then(response => {
                     if (!response.ok) {
@@ -112,20 +111,83 @@
                     return response.text();
                 })
                 .then(html => {
-                    // Update the main content area with the post details
-                    document.getElementById('main-content').innerHTML = html;
+                    // Create a temporary container to parse the HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+
+                    // Remove the mark as solved button if it exists
+                    const solvedBtn = tempDiv.querySelector('[id^="mark-as-solved-btn"]');
+                    if (solvedBtn) {
+                        solvedBtn.remove();
+                    }
+
+                    // Update the main content area with the modified HTML
+                    document.getElementById('main-content').innerHTML = tempDiv.innerHTML;
                     
                     // Highlight selected post
                     document.querySelectorAll('.post').forEach(post => {
                         post.classList.remove('selected');
                     });
                     document.getElementById(`post-${postId}`).classList.add('selected');
+
+                    // Re-attach vote event handlers
+                    document.querySelectorAll('.vote-btn').forEach(button => {
+                        const originalOnClick = button.getAttribute('onclick');
+                        if (originalOnClick) {
+                            button.removeAttribute('onclick');
+                            const match = originalOnClick.match(/handleVote\((\d+),\s*'(\w+)'\)/);
+                            if (match) {
+                                const [_, commentId, voteType] = match;
+                                button.addEventListener('click', () => handleVote(commentId, voteType));
+                            }
+                        }
+                    });
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     document.getElementById('main-content').innerHTML = 
                         '<div class="text-center p-8 text-red-500">Error loading post details</div>';
                 });
+        }
+    
+        // Move handleVote function outside of the loaded content
+        function handleVote(commentId, voteType) {
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(`/vote/comment/${commentId}/${voteType}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update vote counts
+                    document.getElementById(`upvotes-${commentId}`).textContent = data.upvotes;
+                    document.getElementById(`downvotes-${commentId}`).textContent = data.downvotes;
+                    
+                    // Update button colors based on user's vote status
+                    const upButton = document.querySelector(`button[onclick*="'upvote'"]:not([disabled])`);
+                    const downButton = document.querySelector(`button[onclick*="'downvote'"]:not([disabled])`);
+                    
+                    if (upButton) upButton.style.color = data.userVoteStatus.hasUpvoted ? '#2c5f13' : '#6c9f3a';
+                    if (downButton) downButton.style.color = data.userVoteStatus.hasDownvoted ? '#2c5f13' : '#6c9f3a';
+                } else {
+                    alert(data.message || 'Error processing vote');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error processing vote. Please try again.');
+            });
         }
     
         // Function to handle new post creation

@@ -5,34 +5,227 @@
     color: #2c3e50;
     line-height: 1.6;
 }
+/* header  */
+
+.post-details-page header {
+    background-color: #6c9f3a;
+    padding: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Brand Section */
+.brand {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+}
+
+.brand h1 {
+    display: block !important;
+    color: white !important;
+    font-size: 2rem !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.brand-tagline {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    margin-top: 4px;
+}
+
+/* Navigation Section */
+.nav-section {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+/* Search Bar */
+.search-bar {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.search-input {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    width: 250px;
+    font-size: 0.9rem;
+}
+
+.search-button {
+    padding: 0.5rem 1rem;
+    background-color: #558b2f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.search-button:hover {
+    background-color: #33691e;
+}
+
+/* Navigation Links */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Button Styles */
+.button-group {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.btn, 
+.search-button,
+.edit-post-btn,
+.mark-unsolved-btn {
+    background-color: #6c9f3a;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    text-align: center;
+    transition: background-color 0.3s ease;
+    min-width: 150px; /* Set minimum width for consistency */
+    height: 40px; /* Set fixed height */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn:hover, 
+.search-button:hover,
+.edit-post-btn:hover,
+.mark-unsolved-btn:hover {
+    background-color: #588b26;
+}
+
+/* Specific button text styles */
+.edit-post-btn {
+    color: white;
+    text-decoration: none;
+}
+
+.create-post-btn {
+    background-color: #558b2f;
+    color: white;
+    border: 1px solid transparent;
+}
+
+.create-post-btn:hover {
+    background-color: #33691e;
+}
+
+.login-btn, .register-btn, .logout-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-btn:hover, .register-btn:hover, .logout-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* User Menu */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.user-link:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.user-avatar {
+    background-color: white;
+    color: #6c9f3a;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.username {
+    font-weight: 500;
+}
+
+.logout-form {
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .nav-section {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .search-bar {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .search-input {
+        width: 100%;
+    }
+
+    .nav-links {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* header*/
+
 
 .post-details-page .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
-}
-
-/* Header Refinement */
-.post-details-page header {
-    background-color: #6c9f3a;
-    color: white;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.3s ease;
-}
-
-.post-details-page header a {
-    color: #ecf0f1;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.post-details-page header a:hover {
-    color: #6c9f3a;
 }
 
 /* Post Details Layout */
@@ -387,4 +580,176 @@
 .cancel-btn {
     background-color: #dc3545;
     color: white;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 5px;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#editPostForm div {
+    margin-bottom: 15px;
+}
+
+#editPostForm label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+#editPostForm input,
+#editPostForm textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#editPostForm button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#editPostForm button:hover {
+    background-color: #45a049;
+}
+
+.solved-status {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #28a745;
+    color: white;
+    border-radius: 4px;
+    margin-left: 10px;
+}
+
+.comments-closed {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin: 10px 0;
+    color: #6c757d;
+}
+
+#mark-as-solved-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#mark-as-solved-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Post Title Section */
+.post-title-section {
+    background: linear-gradient(135deg, #6c9f3a, #588b26);
+    padding: 30px 0;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.post-title-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.post-title {
+    color: #ffffff;
+    font-size: 32px;
+    font-weight: 900;
+    margin: 0;
+    letter-spacing: 0.5px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    font-family: Arial, sans-serif;
+}
+
+.post-meta {
+    color: #ffffff;
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.post-author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.post-date {
+    opacity: 0.9;
+}
+
+.button-group {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.btn.search-button {
+    background-color: #6c9f3a;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    text-align: center;
+    transition: background-color 0.3s ease;
+    min-width: 120px;
+    height: 35px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn.search-button:hover {
+    background-color: #588b26;
 }
