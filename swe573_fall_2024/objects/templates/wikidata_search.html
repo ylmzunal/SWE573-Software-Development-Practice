@@ -1,27 +1,102 @@
-{% extends 'base.html' %}
-
-{% block content %}
-<div class="search-container">
-    <h2>Wikidata Search Results</h2>
-    
-    <form method="get" action="{% url 'wikidata_search' %}" class="search-form">
-        <input type="text" name="q" value="{{ query }}" placeholder="Search Wikidata..." class="search-input">
-        <button type="submit" class="search-button">Search</button>
-    </form>
-
-    {% if results %}
-        <div class="search-results">
-            {% for item in results %}
-                <div class="result-item">
-                    <h3>{{ item.label }}</h3>
-                    <p>{{ item.description }}</p>
-                    <p class="entity-id">ID: {{ item.id }}</p>
-                    <a href="https://www.wikidata.org/wiki/{{ item.id }}" target="_blank" class="view-link">View on Wikidata</a>
-                </div>
-            {% endfor %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wikidata Search</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'objects/css/wikidata_search.css' %}">
+</head>
+<body>
+    <div class="navbar">
+        <div class="search-container">
+            <div class="search-bar">
+                <form method="get" action="{% url 'wikidata_search' %}">
+                    <input type="text" name="q" placeholder="Search Wikidata" class="search-input">
+                    <button class="search-button">
+                        Search
+                    </button>
+                </form>
+            </div>
+            <button class="create-post-button">Create New Post</button>
+            <button class="logout-button">Logout</button>
+            <div class="user-profile">
+                <span class="profile-initial">S</span>
+                <span class="username">swe573</span>
+            </div>
         </div>
-    {% elif query %}
-        <p>No results found for "{{ query }}"</p>
-    {% endif %}
-</div>
-{% endblock %} 
+    </div>
+
+    <script src="{% static 'objects/js/wikidata_search.js' %}"></script>
+    <script>
+    function toggleFilterPanel() {
+        const filterPanel = document.getElementById('filter-panel');
+        filterPanel.style.display = filterPanel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Close filter panel when clicking outside
+    document.addEventListener('click', function(event) {
+        const filterPanel = document.getElementById('filter-panel');
+        const filterBtn = document.querySelector('.filter-btn');
+        
+        if (!filterPanel.contains(event.target) && !filterBtn.contains(event.target)) {
+            filterPanel.style.display = 'none';
+        }
+    });
+    </script>
+
+    <style>
+    .search-input-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .filter-btn {
+        padding: 8px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #666;
+    }
+
+    .filter-btn:hover {
+        color: #333;
+    }
+
+    .filter-panel {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 1000;
+        margin-top: 5px;
+    }
+
+    .filter-options {
+        display: flex;
+        gap: 10px;
+    }
+
+    .filter-select {
+        padding: 6px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-width: 120px;
+    }
+    </style>
+</body>
+</html> 

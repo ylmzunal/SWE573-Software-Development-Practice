@@ -52,7 +52,7 @@ class Object(models.Model):
 ########### 
 
 class Post(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=200)
     content = models.TextField()
     author = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='posts', null=True, blank=True)
     image = models.ImageField(upload_to='post_images/', null=True, blank=True)
@@ -69,26 +69,11 @@ class Post(models.Model):
         self.solved_at = timezone.now()
         self.save()
     
-    material = models.CharField(              # Materyal özelliği
-        max_length=100, blank=True, null=True,
-        help_text="Cismin materyali (örn: ahşap, plastik, metal)"
-    )
-    size = models.FloatField(                 # Boyut özelliği
-        blank=True, null=True,
-        help_text="Cismin boyutu (örneğin: uzunluk, çap)"
-    )
-    color = models.CharField(                 # Renk özelliği
-        max_length=50, blank=True, null=True,
-        help_text="Cismin rengi (örn: kırmızı, mavi)"
-    )
-    shape = models.CharField(                 # Şekil özelliği
-        max_length=50, blank=True, null=True,
-        help_text="Cismin şekli (örn: küresel, silindirik)"
-    )
-    weight = models.FloatField(               # Ağırlık özelliği
-        blank=True, null=True,
-        help_text="Cismin ağırlığı (kg cinsinden)"
-    )
+    material = models.CharField(max_length=200, blank=True, null=True)
+    color = models.CharField(max_length=200, blank=True, null=True)
+    shape = models.CharField(max_length=200, blank=True, null=True)
+    weight = models.CharField(max_length=200, blank=True, null=True)
+    size = models.CharField(max_length=200, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     last_edited_by = models.ForeignKey(

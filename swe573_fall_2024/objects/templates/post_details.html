@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_filters %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -7,6 +8,136 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Object Finder</title>
     <link rel="stylesheet" href="{% static 'objects/css/post_details.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+    .search-input-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-btn {
+        padding: 8px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: white;
+    }
+
+    .filter-btn:hover {
+        opacity: 0.8;
+    }
+
+    .filter-panel {
+        position: absolute;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 12px;
+        margin-top: 5px;
+        z-index: 1000;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        width: 150px;
+    }
+
+    .filter-panel.show {
+        display: block;
+    }
+
+    .filter-options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filter-select {
+        padding: 6px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-width: 120px;
+    }
+
+    .search-container {
+        margin: 20px 0;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .search-input-group {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .filter-btn {
+        padding: 8px;
+        background: #4CAF50;
+        border: none;
+        border-radius: 4px;
+        color: white;
+        cursor: pointer;
+    }
+
+    .search-button {
+        padding: 8px 16px;
+        background: #4CAF50;
+        border: none;
+        border-radius: 4px;
+        color: white;
+        cursor: pointer;
+    }
+
+    .filter-panel {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        margin-top: 10px;
+    }
+
+    .filter-options {
+        display: flex;
+        gap: 10px;
+    }
+
+    .filter-select {
+        flex: 1;
+        padding: 6px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    @media (max-width: 768px) {
+        .filter-options {
+            flex-direction: column;
+        }
+    }
+
+    .filter-checkbox {
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        color: #333;
+        cursor: pointer;
+    }
+
+    .filter-checkbox input[type="checkbox"] {
+        margin-right: 8px;
+    }
+
+    .filter-checkbox:hover {
+        color: #4CAF50;
+    }
+    </style>
 </head>
 <body class="post-details-page">
     <!-- Header -->
@@ -22,13 +153,39 @@
             <!-- Navigation Section -->
             <div class="nav-section">
                 <div class="search-bar">
-                    <form method="get" action="{% url 'wikidata_search' %}">
-                        <input type="text" name="q" placeholder="Search Wikidata" class="search-input">
-                        <button class="search-button">
-                            Search
-                        </button>
+                    <form method="get" action="{% url 'wikidata_search' %}" id="search-form">
+                        <div class="search-input-group">
+                            <input type="text" name="q" placeholder="Search Wikidata" class="search-input" value="{{ query }}">
+                            <input type="hidden" name="post_id" value="{{ post.id }}">
+                            <button type="button" class="filter-btn" onclick="toggleFilterPanel()">
+                                <i class="fas fa-filter"></i>
+                            </button>
+                            <button type="submit" class="search-button">Search</button>
+                        </div>
+                        
+                        <!-- Filter Panel -->
+                        <div id="filter-panel" class="filter-panel" style="display: none;">
+                            <div class="filter-options">
+                                <label class="filter-checkbox">
+                                    <input type="checkbox" name="filter_type" value="material"> Material
+                                </label>
+                                <label class="filter-checkbox">
+                                    <input type="checkbox" name="filter_type" value="shape"> Shape
+                                </label>
+                                <label class="filter-checkbox">
+                                    <input type="checkbox" name="filter_type" value="color"> Color
+                                </label>
+                                <label class="filter-checkbox">
+                                    <input type="checkbox" name="filter_type" value="weight"> Weight
+                                </label>
+                                <label class="filter-checkbox">
+                                    <input type="checkbox" name="filter_type" value="size"> Size
+                                </label>
+                            </div>
+                        </div>
                     </form>
                 </div>
+
                 <nav class="nav-links">
                     {% if user.is_authenticated %}
                         <a href="{% url 'create_post' %}" class="btn create-post-btn">Create New Post</a>
@@ -166,11 +323,49 @@
             <div class="properties-section">
                 <h2 class="properties-title">Properties</h2>
                 
-                <p class="property-line">Material: {{ material }}</p>
-                <p class="property-line">Size (cm): {{ post.size }}</p>
-                <p class="property-line">Color: {{ color }}</p>
-                <p class="property-line">Shape: {{ shape }}</p>
-                <p class="property-line">Weight (gr): {{ post.weight }}</p>
+                <p class="property-line">Materials: 
+                    {% if post.material %}
+                        {% with materials=post.material|split:"," %}
+                            {% for material in materials %}
+                                {{ material }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    {% else %}
+                        Not specified
+                    {% endif %}
+                </p>
+                
+                <p class="property-line">Size (cm): 
+                    {% if post.size %}{{ post.size }}{% else %}Not specified{% endif %}
+                </p>
+                
+                <p class="property-line">Colors: 
+                    {% if post.color %}
+                        {% with colors=post.color|split:"," %}
+                            {% for color in colors %}
+                                {{ color }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    {% else %}
+                        Not specified
+                    {% endif %}
+                </p>
+                
+                <p class="property-line">Shapes: 
+                    {% if post.shape %}
+                        {% with shapes=post.shape|split:"," %}
+                            {% for shape in shapes %}
+                                {{ shape }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    {% else %}
+                        Not specified
+                    {% endif %}
+                </p>
+                
+                <p class="property-line">Weight (gr): 
+                    {% if post.weight %}{{ post.weight }}{% else %}Not specified{% endif %}
+                </p>
             </div>
         </div>
     </div>
@@ -252,3 +447,37 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
+<script>
+    function toggleFilterPanel() {
+        const filterPanel = document.getElementById('filter-panel');
+        if (filterPanel) {
+            console.log('Filter panel found');  // Debug line
+            filterPanel.style.display = filterPanel.style.display === 'none' ? 'block' : 'none';
+        } else {
+            console.log('Filter panel not found');  // Debug line
+        }
+    }
+
+    // Close filter panel when clicking outside
+    document.addEventListener('click', function(event) {
+        const filterPanel = document.getElementById('filter-panel');
+        const filterBtn = document.querySelector('.filter-btn');
+        
+        if (filterPanel && !filterPanel.contains(event.target) && !filterBtn.contains(event.target)) {
+            filterPanel.style.display = 'none';
+        }
+    });
+
+    // Add this to check if the script is running
+    console.log('Filter script loaded');
+</script>
+
+<script>
+document.getElementById('search-form').addEventListener('submit', function(e) {
+    // e.preventDefault(); // Uncomment this line for testing
+    console.log('Form submitted');
+    console.log('Query:', this.querySelector('input[name="q"]').value);
+    console.log('Post ID:', this.querySelector('input[name="post_id"]').value);
+    console.log('Selected filters:', Array.from(this.querySelectorAll('input[name="filter_type"]:checked')).map(cb => cb.value));
+});
+</script>

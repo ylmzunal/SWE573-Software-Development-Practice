@@ -51,20 +51,23 @@ SHAPE_CHOICES = [
 ]
 
 class PostForm(forms.ModelForm):
-    material = forms.ChoiceField(
+    material = forms.MultipleChoiceField(
         choices=MATERIAL_CHOICES,
         required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'checkbox-group'}),
+        help_text="Select one or more materials"
     )
-    color = forms.ChoiceField(
+    color = forms.MultipleChoiceField(
         choices=COLOR_CHOICES,
         required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'checkbox-group'}),
+        help_text="Select one or more colors"
     )
-    shape = forms.ChoiceField(
+    shape = forms.MultipleChoiceField(
         choices=SHAPE_CHOICES,
         required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'checkbox-group'}),
+        help_text="Select one or more shapes"
     )
     size = forms.FloatField(
         required=False,

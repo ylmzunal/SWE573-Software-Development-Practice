@@ -7,8 +7,10 @@ from .views import vote_comment
 
 
 urlpatterns = [
+    # ... your other URLs ...
+    path('create-post/', views.create_post, name='create_post'),
     path('', views.homepage, name='homepage'),
-    path('wikidata-search/', views.search_view, name='wikidata_search'),
+    path('wikidata-search/', views.wikidata_search, name='wikidata_search'),
     path('accounts/register/', object_views.register, name='register'),
     path('profile/<str:username>/', views.profile_view, name='profile'),
     path('search/', views.search_view, name='search_view'),

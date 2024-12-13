@@ -1,47 +1,120 @@
-.search-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
+.navbar {
+    background-color: #6c9f3a;
+    padding: 10px 20px;
 }
 
-.search-form {
-    margin-bottom: 30px;
+.search-container {
     display: flex;
+    align-items: center;
     gap: 10px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.search-box {
+    position: relative;
+    display: flex;
+    flex: 1;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
 }
 
 .search-input {
     flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    padding: 12px;
+    border: none;
+    outline: none;
+    font-size: 16px;
 }
 
-.result-item {
-    background: white;
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.result-item h3 {
-    margin: 0 0 10px 0;
-    color: #6c9f3a;
-}
-
-.entity-id {
+.filter-button {
+    width: 40px;
+    padding: 0 10px;
+    background: none;
+    border: none;
+    border-left: 1px solid #ddd;
+    cursor: pointer;
     color: #666;
-    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.view-link {
-    display: inline-block;
-    margin-top: 10px;
-    color: #6c9f3a;
+.filter-button:hover {
+    background-color: #f5f5f5;
+}
+
+.search-button {
+    padding: 12px 24px;
+    background-color: #4a8522;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.create-post-button,
+.logout-button {
+    padding: 12px 24px;
+    background-color: #558b2f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
     text-decoration: none;
 }
 
-.view-link:hover {
-    text-decoration: underline;
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-initial {
+    width: 32px;
+    height: 32px;
+    background-color: white;
+    color: #6c9f3a;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.username {
+    color: white;
+}
+
+.filter-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    min-width: 200px;
+}
+
+.filter-dropdown.show {
+    display: block;
+}
+
+.filter-content {
+    padding: 10px;
+}
+
+.filter-item {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-item:hover {
+    background-color: #f5f5f5;
 } 

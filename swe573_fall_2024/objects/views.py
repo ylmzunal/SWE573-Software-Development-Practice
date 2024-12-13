@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from .models import Post, Comment, Object, Profile, PostFeature
-from .forms import PostForm, CommentForm, RegistrationForm, RegisterForm
+from .forms import PostForm, CommentForm, RegistrationForm, RegisterForm, MATERIAL_CHOICES, COLOR_CHOICES, SHAPE_CHOICES
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count
@@ -65,7 +65,7 @@ def profile_view(request, username):
     # Calculate badges
     badges = []
     if total_posts >= 5:
-        badges.append("Active Poster 🌟")
+        badges.append("Active Poster ��������")
     if total_comments >= 10:
         badges.append("Helpful Commenter 💬")
     if total_upvotes >= 10:
@@ -120,16 +120,50 @@ def create_post_form(request):
 
 @login_required
 def create_post(request):
-    if request.method == "POST":
-        form = PostForm(request.POST, request.FILES)
+    if request.method == 'POST':
+        post_data = request.POST.copy()  # Make a mutable copy of the POST data
+        
+        # Convert comma-separated strings to lists for multiple choice fields
+        for field in ['material', 'color', 'shape']:
+            if post_data.get(field):
+                values = post_data.get(field).split(',')
+                post_data.setlist(field, values)  # Set as list of individual values
+        
+        form = PostForm(post_data, request.FILES)
+        print("Modified POST data:", post_data)
+        
         if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            return redirect('post_details', post_id=post.id)
+            try:
+                post = form.save(commit=False)
+                post.author = request.user
+                
+                # Store the selections as comma-separated strings in the model
+                post.material = ','.join(post_data.getlist('material'))
+                post.color = ','.join(post_data.getlist('color'))
+                post.shape = ','.join(post_data.getlist('shape'))
+                
+                post.save()
+                messages.success(request, 'Post created successfully!')
+                return redirect('homepage')
+            except Exception as e:
+                print(f"Error saving post: {e}")
+                messages.error(request, f'Error creating post: {str(e)}')
+        else:
+            print("Form errors:", form.errors)
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
     else:
         form = PostForm()
-    return render(request, 'post_form.html', {'form': form})
+
+    context = {
+        'form': form,
+        'material_choices': [choice for choice in MATERIAL_CHOICES if choice[0]],
+        'color_choices': [choice for choice in COLOR_CHOICES if choice[0]],
+        'shape_choices': [choice for choice in SHAPE_CHOICES if choice[0]],
+    }
+    
+    return render(request, 'post_form.html', context)
 
 # def create_post_ajax(request):
 #     if request.method == 'POST':
@@ -159,37 +193,20 @@ def post_list_ajax(request):
 
 def post_details(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    comments = post.comments.all()
-
-    if request.method == 'POST':
-        if 'mark_solved' in request.POST and not post.solved:
-            if request.user == post.author or request.user.is_superuser:
-                post.solved = True
-                post.save()
-                messages.success(request, 'Post marked as solved!')
-                return redirect('post_details', post_id=post_id)
-        elif request.user.is_authenticated:
-            content = request.POST.get('content', '').strip()
-            if content:
-                Comment.objects.create(
-                    post=post,
-                    user=request.user,
-                    content=content
-                )
-                return redirect('post_details', post_id=post_id)
-
-    object_info = find_object_from_post(post_id)
-    print(f"find_object_from_post function is called with post_id: {post_id}")
-
+    comments = post.comments.all().order_by('created_at')  # Get all comments for this post
+    
+    # Convert the string representations to lists if they exist
+    materials = post.material.split(',') if post.material else []
+    colors = post.color.split(',') if post.color else []
+    shapes = post.shape.split(',') if post.shape else []
+    
     context = {
         'post': post,
-        'comments': comments,
-        'object_info': object_info,
+        'comments': comments,  # Add comments to context
+        'material': post.material,
+        'color': post.color,
+        'shape': post.shape,
     }
-    
-    if request.user.is_authenticated and not post.solved and (request.user == post.author or request.user.is_superuser):
-        context['can_mark_solved'] = True
-    
     return render(request, 'post_details.html', context)
 
 def post_details_partial(request, post_id):
@@ -672,29 +689,86 @@ def mark_post_status(request, post_id):
 
 def wikidata_search(request):
     query = request.GET.get('q', '')
-    results = []
+    filter_types = request.GET.getlist('filter_type')
+    post_id = request.GET.get('post_id')
     
+    print("Original query:", query)
+    print("Selected filters:", filter_types)
+    print("Post ID:", post_id)
+    
+    search_query = query
+    local_results = Post.objects.none()
+    tag_results = Post.objects.none()
+    wikidata_results = []
+
     if query:
-        url = "https://www.wikidata.org/w/api.php"
-        params = {
-            'action': 'wbsearchentities',
-            'format': 'json',
-            'language': 'en',
-            'search': query,
-            'limit': 10
-        }
-        
-        try:
-            response = requests.get(url, params=params)
-            data = response.json()
-            results = data.get('search', [])
-        except:
-            results = []
-    
-    return render(request, 'wikidata_search.html', {
+        # Get local results
+        terms = query.replace(",", " ").split()
+        for term in terms:
+            local_results = local_results | Post.objects.filter(
+                Q(title__icontains=term) | Q(content__icontains=term)
+            )
+
+        # Get tag results
+        for term in terms:
+            tag_results = tag_results | Post.objects.filter(
+                Q(tags__name__icontains=term)
+            )
+
+        # Add filter properties to search if post_id exists
+        if post_id:
+            try:
+                post = Post.objects.get(id=post_id)
+                print("Post found:", post)
+                
+                # Helper function to clean string list values
+                def clean_list_string(value):
+                    if value:
+                        # Remove brackets, quotes, and split by comma
+                        cleaned = value.strip('[]').replace("'", "").split(',')
+                        return [item.strip() for item in cleaned]
+                    return []
+
+                # Process each selected filter
+                if 'color' in filter_types and post.color:
+                    colors = clean_list_string(post.color)
+                    search_query += ' ' + ' '.join(colors)
+                    print("Added colors:", colors)
+                
+                if 'material' in filter_types and post.material:
+                    materials = clean_list_string(post.material)
+                    search_query += ' ' + ' '.join(materials)
+                    print("Added materials:", materials)
+                    
+                if 'shape' in filter_types and post.shape:
+                    shapes = clean_list_string(post.shape)
+                    search_query += ' ' + ' '.join(shapes)
+                    print("Added shapes:", shapes)
+                    
+                if 'weight' in filter_types and post.weight:
+                    search_query += f' {post.weight}'
+                    print("Added weight:", post.weight)
+                    
+                if 'size' in filter_types and post.size:
+                    search_query += f' {post.size}'
+                    print("Added size:", post.size)
+                    
+            except Post.DoesNotExist:
+                print("Post not found!")
+                pass
+
+        print("Final search query:", search_query)
+        # Get Wikidata results
+        wikidata_results = search_wikidata(search_query)
+
+    context = {
         'query': query,
-        'results': results
-    })
+        'local_results': local_results.distinct(),
+        'tag_results': tag_results.distinct(),
+        'wikidata_results': wikidata_results,
+    }
+    
+    return render(request, 'search_results.html', context)
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
@@ -717,4 +791,21 @@ def post_detail(request, post_id):
     }
     
     return render(request, 'post_details.html', context)
+
+def post_form_view(request):
+    if request.method == 'POST':
+        form = PostForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Your existing form processing code
+            pass
+    else:
+        form = PostForm()
+
+    context = {
+        'form': form,
+        'material_choices': MATERIAL_CHOICES[1:],  # Skip the 'None' option
+        'color_choices': COLOR_CHOICES[1:],        # Skip the 'None' option
+        'shape_choices': SHAPE_CHOICES[1:],        # Skip the 'None' option
+    }
+    return render(request, 'post_form.html', context)
 

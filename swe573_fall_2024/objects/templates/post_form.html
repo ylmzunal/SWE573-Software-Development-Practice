@@ -1,6 +1,8 @@
 {% load static %}
 
 <link rel="stylesheet" href="{% static 'objects/css/post_form.css' %}">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <body class="post-form-page">
     <!-- Header -->
@@ -9,17 +11,47 @@
         <a href="{% url 'homepage' %}" class="back-link">Back to Object Finder</a>
     </header>
     {% endif %}
+
+    <!-- Add this right after the header -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="post-form-container">
         <form method="POST" enctype="multipart/form-data" class="post-form">
             {% csrf_token %}
             <h2>Create New Post</h2>
             
             <div class="form-group">
-                <label for="{{ form.title.id_for_label }}">Title</label>
-                {{ form.title }}
+                <label for="title">Title</label>
+                <input type="text" name="title" id="title" class="form-control" required>
                 {% if form.title.errors %}
                     <div class="error-message">{{ form.title.errors }}</div>
                 {% endif %}
+                
+                <!-- Property Selection Buttons -->
+                <div class="property-buttons">
+                    <button type="button" class="btn btn-outline-primary" onclick="openPropertyModal('material')">
+                        <i class="fas fa-cube"></i> Select Material
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="openPropertyModal('color')">
+                        <i class="fas fa-palette"></i> Select Color
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="openPropertyModal('shape')">
+                        <i class="fas fa-shapes"></i> Select Shape
+                    </button>
+                </div>
+
+                <!-- Hidden input fields -->
+                <input type="hidden" name="material" id="material-input">
+                <input type="hidden" name="color" id="color-input">
+                <input type="hidden" name="shape" id="shape-input">
             </div>
 
             <div class="form-group">
@@ -32,23 +64,8 @@
 
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="{{ form.material.id_for_label }}">Material</label>
-                    {{ form.material }}
-                </div>
-
-                <div class="form-group">
                     <label for="{{ form.size.id_for_label }}">Size (cm)</label>
                     {{ form.size }}
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.color.id_for_label }}">Color</label>
-                    {{ form.color }}
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.shape.id_for_label }}">Shape</label>
-                    {{ form.shape }}
                 </div>
 
                 <div class="form-group">
@@ -66,4 +83,188 @@
             <button type="submit" class="submit-btn">Create Post</button>
         </form>
     </div>
+
+    <!-- Property Selection Modals -->
+    <div class="modal fade" id="propertyModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Properties</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Material Options -->
+                    <div id="material-options" class="property-options" style="display: none;">
+                        <div class="property-grid">
+                            {% for value, label in material_choices %}
+                            <label class="property-item">
+                                <input type="checkbox" value="{{ value }}">
+                                <span>{{ label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Color Options -->
+                    <div id="color-options" class="property-options" style="display: none;">
+                        <div class="property-grid">
+                            {% for value, label in color_choices %}
+                            <label class="property-item">
+                                <input type="checkbox" value="{{ value }}">
+                                <span class="color-box" style="background-color: {{ value|lower }};"></span>
+                                <span>{{ label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Shape Options -->
+                    <div id="shape-options" class="property-options" style="display: none;">
+                        <div class="property-grid">
+                            {% for value, label in shape_choices %}
+                            <label class="property-item">
+                                <input type="checkbox" value="{{ value }}">
+                                <span>{{ label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="savePropertySelections()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    .property-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+        padding: 15px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .property-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .property-item:hover {
+        background-color: #f8f9fa;
+        border-color: #0056b3;
+    }
+
+    .property-item input[type="checkbox"] {
+        margin-right: 10px;
+    }
+
+    .color-box {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        margin-right: 8px;
+        border: 1px solid #ddd;
+    }
+
+    .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .property-buttons {
+        display: flex;
+        gap: 10px;
+        margin: 15px 0;
+        flex-wrap: wrap;
+    }
+
+    .property-buttons button {
+        min-width: 120px;
+    }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+    let currentPropertyType = '';
+    let selectedProperties = {
+        material: [],
+        color: [],
+        shape: []
+    };
+
+    function openPropertyModal(propertyType) {
+        currentPropertyType = propertyType;
+        document.querySelectorAll('.property-options').forEach(el => el.style.display = 'none');
+        document.getElementById(`${propertyType}-options`).style.display = 'block';
+        
+        // Pre-select checkboxes based on current selections
+        const selectedValues = selectedProperties[currentPropertyType];
+        document.querySelectorAll(`#${currentPropertyType}-options input[type="checkbox"]`).forEach(checkbox => {
+            checkbox.checked = selectedValues.includes(checkbox.value);
+        });
+        
+        $('#propertyModal').modal('show');
+    }
+
+    function savePropertySelections() {
+        const options = document.querySelectorAll(`#${currentPropertyType}-options input:checked`);
+        selectedProperties[currentPropertyType] = Array.from(options).map(opt => opt.value);
+        
+        // Update hidden input
+        const input = document.getElementById(`${currentPropertyType}-input`);
+        input.value = selectedProperties[currentPropertyType].join(',');
+        
+        // Update button text
+        const btn = document.querySelector(`button[onclick="openPropertyModal('${currentPropertyType}')"]`);
+        const count = selectedProperties[currentPropertyType].length;
+        const selectedText = selectedProperties[currentPropertyType].join(', ');
+        btn.innerHTML = `<i class="fas fa-check"></i> ${currentPropertyType} (${count})`;
+        btn.setAttribute('title', selectedText); // Show selected values on hover
+        
+        $('#propertyModal').modal('hide');
+    }
+
+    // Form submission handler
+    document.querySelector('form').addEventListener('submit', function(e) {
+        // Don't prevent default - let the form submit normally
+        
+        // Ensure all selected properties are included
+        for (let prop in selectedProperties) {
+            if (selectedProperties[prop].length > 0) {
+                const input = document.getElementById(`${prop}-input`);
+                input.value = selectedProperties[prop].join(',');
+            }
+        }
+    });
+
+    // Initialize Bootstrap modal
+    $(document).ready(function() {
+        $('#propertyModal').modal({
+            show: false
+        });
+    });
+    </script>
+
+    <!-- Add this temporarily at the top of your template to debug -->
+    {% if debug %}
+    <div style="display: none;">
+        <h3>Debug Info:</h3>
+        <p>Material Choices: {{ material_choices|join:", " }}</p>
+        <p>Color Choices: {{ color_choices|join:", " }}</p>
+        <p>Shape Choices: {{ shape_choices|join:", " }}</p>
+    </div>
+    {% endif %}
 </body>
