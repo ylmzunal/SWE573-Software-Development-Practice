@@ -2,7 +2,7 @@ import requests
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from .models import Post, Comment, Object, Profile, PostFeature
+from .models import Post, Comment, Object, Profile, PostFeature, Vote
 from .forms import PostForm, CommentForm, RegistrationForm, RegisterForm, MATERIAL_CHOICES, COLOR_CHOICES, SHAPE_CHOICES
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
@@ -65,7 +65,7 @@ def profile_view(request, username):
     # Calculate badges
     badges = []
     if total_posts >= 5:
-        badges.append("Active Poster ��������")
+        badges.append("Active Poster ������������")
     if total_comments >= 10:
         badges.append("Helpful Commenter 💬")
     if total_upvotes >= 10:
@@ -193,20 +193,26 @@ def post_list_ajax(request):
 
 def post_details(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    comments = post.comments.all().order_by('created_at')  # Get all comments for this post
+    # Get comments directly and order them
+    comments = Comment.objects.filter(post=post).select_related('user').order_by('-created_at')
     
-    # Convert the string representations to lists if they exist
-    materials = post.material.split(',') if post.material else []
-    colors = post.color.split(',') if post.color else []
-    shapes = post.shape.split(',') if post.shape else []
-    
+    # Debug prints
+    print(f"Post ID: {post_id}")
+    print(f"Post title: {post.title}")
+    print(f"Number of comments: {comments.count()}")
+    for comment in comments:
+        print(f"Comment ID: {comment.id}, Author: {comment.user.username}, Content: {comment.content}")
+
     context = {
         'post': post,
-        'comments': comments,  # Add comments to context
-        'material': post.material,
-        'color': post.color,
-        'shape': post.shape,
+        'comments': comments,
+        'comment_count': comments.count(),
+        'is_homepage': False
     }
+    
+    # Debug print context
+    print("Context being sent to template:", context)
+    
     return render(request, 'post_details.html', context)
 
 def post_details_partial(request, post_id):
@@ -233,14 +239,28 @@ def post_details_partial(request, post_id):
     # Use the existing post_details.html template
     return render(request, 'post_details.html', context)
 
+@login_required
 def add_comment(request, post_id):
-    if request.method == "POST":
+    if request.method == 'POST':
         post = get_object_or_404(Post, id=post_id)
-        content = request.POST.get("content")
+        content = request.POST.get('content')
+        
         if content:
-            Comment.objects.create(post=post, content=content, user=request.user)
-        # Yorum eklendikten sonra detay sayfasına yönlendir
-        return redirect('post_detail', post_id=post.id)
+            try:
+                comment = Comment.objects.create(
+                    post=post,
+                    user=request.user,
+                    content=content
+                )
+                print(f"Comment created successfully: {comment.id}")
+                messages.success(request, 'Comment added successfully!')
+            except Exception as e:
+                print(f"Error creating comment: {str(e)}")
+                messages.error(request, 'Error adding comment. Please try again.')
+        else:
+            messages.error(request, 'Comment content cannot be empty.')
+            
+    return redirect('post_details', post_id=post_id)
 
 @login_required
 def edit_post(request, post_id):
@@ -271,34 +291,26 @@ def edit_post(request, post_id):
 
 @login_required
 def edit_comment(request, comment_id):
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'message': 'Invalid request method'})
-    
     comment = get_object_or_404(Comment, id=comment_id)
     
-    # Check if user is authorized to edit
-    if comment.user != request.user and not request.user.is_superuser:
-        return JsonResponse({'success': False, 'message': 'Not authorized to edit this comment'})
+    # Check if user is the comment author
+    if request.user != comment.user:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     
-    try:
-        data = json.loads(request.body)
-        content = data.get('content', '').strip()
-        
-        if not content:
-            return JsonResponse({'success': False, 'message': 'Comment content cannot be empty'})
-        
-        comment.content = content
-        comment.save()
-        
-        return JsonResponse({
-            'success': True,
-            'message': 'Comment updated successfully'
-        })
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': str(e)
-        })
+    if request.method == 'POST':
+        new_content = request.POST.get('content')
+        if new_content:
+            comment.content = new_content
+            comment.last_edited_by = request.user
+            comment.save()
+            return JsonResponse({
+                'success': True,
+                'content': comment.content,
+                'edited_at': comment.updated_at.strftime('%B %d, %Y, %I:%M %p')
+            })
+        return JsonResponse({'error': 'Content cannot be empty'}, status=400)
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 
@@ -347,52 +359,61 @@ def get_wikidata_label(qid):
 @login_required
 def vote_comment(request, comment_id, vote_type):
     if request.method == 'POST':
-        comment = get_object_or_404(Comment, id=comment_id)
-        user = request.user
-        
-        # Get current vote counts
-        upvotes = comment.upvotes or 0
-        downvotes = comment.downvotes or 0
-        
-        # Store previous vote state to determine if we're toggling
-        was_upvoted = False
-        was_downvoted = False
-        
-        if vote_type == 'upvote':
-            if comment.upvotes and comment.upvotes > 0:
-                # If already upvoted, remove the upvote
-                comment.upvotes = comment.upvotes - 1
-                was_upvoted = True
+        try:
+            comment = get_object_or_404(Comment, id=comment_id)
+            
+            # Debug print
+            print(f"Processing vote: Comment {comment_id}, Type {vote_type}, User {request.user}")
+            
+            # Check for existing vote
+            existing_vote = Vote.objects.filter(user=request.user, comment=comment).first()
+            
+            if existing_vote:
+                if existing_vote.vote_type == vote_type:
+                    # If voting the same way, remove the vote
+                    existing_vote.delete()
+                    print(f"Removed existing {vote_type} vote")
+                else:
+                    # If voting differently, update the vote
+                    existing_vote.vote_type = vote_type
+                    existing_vote.save()
+                    print(f"Changed vote to {vote_type}")
             else:
-                # Add new upvote
-                comment.upvotes = (comment.upvotes or 0) + 1
-                # Remove downvote if exists
-                if comment.downvotes and comment.downvotes > 0:
-                    comment.downvotes = comment.downvotes - 1
-        else:  # downvote
-            if comment.downvotes and comment.downvotes > 0:
-                # If already downvoted, remove the downvote
-                comment.downvotes = comment.downvotes - 1
-                was_downvoted = True
-            else:
-                # Add new downvote
-                comment.downvotes = (comment.downvotes or 0) + 1
-                # Remove upvote if exists
-                if comment.upvotes and comment.upvotes > 0:
-                    comment.upvotes = comment.upvotes - 1
-        
-        comment.save()
-        
-        return JsonResponse({
-            'success': True,
-            'upvotes': comment.upvotes or 0,
-            'downvotes': comment.downvotes or 0,
-            'userVoteStatus': {
-                'hasUpvoted': vote_type == 'upvote' and not was_upvoted,
-                'hasDownvoted': vote_type == 'downvote' and not was_downvoted
-            }
-        })
-    
+                # Create new vote
+                Vote.objects.create(
+                    user=request.user,
+                    comment=comment,
+                    vote_type=vote_type
+                )
+                print(f"Created new {vote_type} vote")
+            
+            # Get updated counts
+            upvotes = Vote.objects.filter(comment=comment, vote_type='up').count()
+            downvotes = Vote.objects.filter(comment=comment, vote_type='down').count()
+            
+            # Get user's current vote
+            current_vote = Vote.objects.filter(
+                user=request.user, 
+                comment=comment
+            ).values_list('vote_type', flat=True).first()
+            
+            print(f"Updated counts - Upvotes: {upvotes}, Downvotes: {downvotes}")
+            print(f"User's current vote: {current_vote}")
+            
+            return JsonResponse({
+                'success': True,
+                'upvotes': upvotes,
+                'downvotes': downvotes,
+                'user_vote': current_vote
+            })
+            
+        except Exception as e:
+            print(f"Error processing vote: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            }, status=500)
+            
     return JsonResponse({
         'success': False,
         'message': 'Invalid request method'

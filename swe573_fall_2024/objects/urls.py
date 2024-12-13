@@ -8,6 +8,8 @@ from .views import vote_comment
 
 urlpatterns = [
     # ... your other URLs ...
+    path('vote/comment/<int:comment_id>/<str:vote_type>/', views.vote_comment, name='vote_comment'),
+    # ... your other URLs ...
     path('create-post/', views.create_post, name='create_post'),
     path('', views.homepage, name='homepage'),
     path('wikidata-search/', views.wikidata_search, name='wikidata_search'),
@@ -32,6 +34,7 @@ urlpatterns = [
     # path('post/<int:post_id>/analyze/', views.analyze_post, name='analyze_post'),
     path('post/<int:post_id>/edit/', views.edit_post, name='edit_post'),
     path('post/<int:post_id>/mark-status/', views.mark_post_status, name='mark_post_status'),
+    path('edit-comment/<int:comment_id>/', views.edit_comment, name='edit_comment'),
 ]
 
 
