@@ -18,6 +18,7 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 # from .wikidata_utils import search_wikidata_nlp, build_attributes_for_sparql
 import json
 from django.contrib import messages
+import os
 
 
 logger = logging.getLogger(__name__)
@@ -42,10 +43,36 @@ def homepage(request):
     else:
         post_form = PostForm()
 
+    # Get all posts with comment count
     posts = Post.objects.annotate(comment_count=Count('comments')).all().order_by('-created_at')
+    
+    # For each post, get its comments and their vote counts
+    for post in posts:
+        comments = Comment.objects.filter(post=post).select_related('user').order_by('-created_at')
+        
+        for comment in comments:
+            # Get vote counts
+            upvotes = Vote.objects.filter(comment=comment, vote_type='up').count()
+            downvotes = Vote.objects.filter(comment=comment, vote_type='down').count()
+            
+            # Get user's vote if logged in
+            user_vote = None
+            if request.user.is_authenticated:
+                user_vote = Vote.objects.filter(
+                    user=request.user, 
+                    comment=comment
+                ).values_list('vote_type', flat=True).first()
+            
+            comment.upvotes = upvotes
+            comment.downvotes = downvotes
+            comment.user_vote = user_vote
+        
+        post.comments_list = comments
+
     context = {
         'post_form': post_form,
-        'posts': posts
+        'posts': posts,
+        'is_homepage': True
     }
     return render(request, 'homepage.html', context)
 
@@ -193,50 +220,70 @@ def post_list_ajax(request):
 
 def post_details(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    # Get comments directly and order them
     comments = Comment.objects.filter(post=post).select_related('user').order_by('-created_at')
     
-    # Debug prints
-    print(f"Post ID: {post_id}")
-    print(f"Post title: {post.title}")
-    print(f"Number of comments: {comments.count()}")
+    # Get vote counts and user votes for each comment
     for comment in comments:
-        print(f"Comment ID: {comment.id}, Author: {comment.user.username}, Content: {comment.content}")
-
+        # Get vote counts
+        upvotes = Vote.objects.filter(comment=comment, vote_type='up').count()
+        downvotes = Vote.objects.filter(comment=comment, vote_type='down').count()
+        
+        # Get user's vote if logged in
+        user_vote = None
+        if request.user.is_authenticated:
+            user_vote = Vote.objects.filter(
+                user=request.user, 
+                comment=comment
+            ).values_list('vote_type', flat=True).first()
+        
+        comment.upvotes = upvotes
+        comment.downvotes = downvotes
+        comment.user_vote = user_vote
+    
     context = {
         'post': post,
         'comments': comments,
         'comment_count': comments.count(),
-        'is_homepage': False
+        'is_homepage': False,
+        'can_edit': request.user.is_authenticated and request.user == post.author,  # Only post author can edit
+        'can_mark_solved': request.user.is_authenticated and request.user == post.author and not post.solved  # Only post author can mark as solved
     }
-    
-    # Debug print context
-    print("Context being sent to template:", context)
     
     return render(request, 'post_details.html', context)
 
 def post_details_partial(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    comments = post.comments.order_by('created_at')
+    comments = Comment.objects.filter(post=post).select_related('user').order_by('-created_at')
     results = find_object_from_post(post_id)
 
-    # Mantığı burada belirleyin
-    can_mark_as_solved = (
-        request.user.is_authenticated and
-        (post.author == request.user or request.user.is_superuser) and
-        not post.solved
-    )
+    # Get vote counts and user votes for each comment
+    for comment in comments:
+        # Get vote counts
+        upvotes = Vote.objects.filter(comment=comment, vote_type='up').count()
+        downvotes = Vote.objects.filter(comment=comment, vote_type='down').count()
+        
+        # Get user's vote if logged in
+        user_vote = None
+        if request.user.is_authenticated:
+            user_vote = Vote.objects.filter(
+                user=request.user, 
+                comment=comment
+            ).values_list('vote_type', flat=True).first()
+        
+        comment.upvotes = upvotes
+        comment.downvotes = downvotes
+        comment.user_vote = user_vote
 
     context = {
         'post': post,
         'comments': comments,
-        'keywords': results['keywords'],  
-        'can_mark_as_solved': can_mark_as_solved,
+        'keywords': results['keywords'],
+        'can_edit': request.user.is_authenticated and request.user == post.author,  # Only post author can edit
+        'can_mark_solved': request.user.is_authenticated and request.user == post.author and not post.solved,  # Only post author can mark as solved
         'is_solved': post.solved,
-        'is_homepage': True  # For standalone page
+        'is_homepage': True
     }
     
-    # Use the existing post_details.html template
     return render(request, 'post_details.html', context)
 
 @login_required
@@ -266,27 +313,78 @@ def add_comment(request, post_id):
 def edit_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     
-    # Check if user is authorized to edit
-    if post.author != request.user and not request.user.is_superuser:
-        return redirect('post_details', post_id=post_id)
+    if request.user != post.author and not request.user.is_superuser:
+        messages.error(request, "You don't have permission to edit this post.")
+        return redirect('post_details', post_id=post.id)
     
     if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES, instance=post)
-        if form.is_valid():
-            edited_post = form.save(commit=False)
-            edited_post.last_edited_by = request.user
-            edited_post.save()
-            form.save_m2m()  # Save many-to-many relationships (for tags)
-            return redirect('post_details', post_id=post_id)
-    else:
-        form = PostForm(instance=post)
+        try:
+            # Handle image upload first
+            if 'image' in request.FILES:
+                print("Processing new image upload")
+                image_file = request.FILES['image']
+                
+                # Delete old image if exists
+                if post.image:
+                    try:
+                        post.image.delete()
+                    except Exception as e:
+                        print(f"Error deleting old image: {e}")
+                
+                # Save new image
+                from django.core.files.storage import default_storage
+                from django.core.files.base import ContentFile
+                
+                path = default_storage.save(
+                    f'post_images/{image_file.name}',
+                    ContentFile(image_file.read())
+                )
+                post.image = path
+            
+            # Handle image clearing
+            elif request.POST.get('image-clear') == 'on':
+                if post.image:
+                    post.image.delete()
+                post.image = None
+            
+            # Update other fields
+            post.title = request.POST.get('title', post.title)
+            post.content = request.POST.get('content', post.content)
+            post.material = ','.join(request.POST.getlist('material'))
+            post.color = ','.join(request.POST.getlist('color'))
+            post.shape = ','.join(request.POST.getlist('shape'))
+            post.size = request.POST.get('size', post.size)
+            post.weight = request.POST.get('weight', post.weight)
+            
+            # Save the post
+            post.save()
+            
+            messages.success(request, 'Post updated successfully!')
+            return redirect('post_details', post_id=post.id)
+            
+        except Exception as e:
+            print(f"Error updating post: {str(e)}")
+            print(f"Exception type: {type(e)}")
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
+            messages.error(request, f'Error updating post: {str(e)}')
+            
+    # Get request or form invalid
+    initial_data = {
+        'material': post.material.split(',') if post.material else [],
+        'color': post.color.split(',') if post.color else [],
+        'shape': post.shape.split(',') if post.shape else [],
+    }
+    form = PostForm(instance=post, initial=initial_data)
     
     context = {
         'form': form,
         'post': post,
-        'is_homepage': False
+        'is_homepage': False,
+        'material_choices': MATERIAL_CHOICES,
+        'color_choices': COLOR_CHOICES,
+        'shape_choices': SHAPE_CHOICES,
     }
-    
     return render(request, 'objects/edit_post.html', context)
 
 @login_required
@@ -338,22 +436,6 @@ def get_wikidata_label(qid):
     except:
         return None
     return None
-
-
-# def add_comment(request, post_id):
-#     if request.method == "POST":
-#         post = get_object_or_404(Post, id=post_id)
-#         content = request.POST.get("content")
-#         if content:
-#             # Yeni yorum oluştur
-#             comment = Comment.objects.create(post=post, content=content, user=request.user)
-#             # Yeni yorumları render et
-#             comments_html = render(request, 'partials/comments.html', {'comments': post.comments.all()}).content.decode('utf-8')
-#             return JsonResponse({"success": True, "html": comments_html})
-#         return JsonResponse({"success": False, "message": "Comment content cannot be empty."})
-#     return JsonResponse({"success": False, "message": "Invalid request."})
-
-
 
 
 @login_required
@@ -433,7 +515,6 @@ def mark_as_solved(request, post_id):
                 'message': 'Only the post author can mark this post as solved or unsolved.'
             }, status=403)
         
-        # Toggle the solved status
         post.solved = not post.solved
         post.save()
         
@@ -628,32 +709,46 @@ def search_view(request):
     """
     Search functionality for both local Post model and Wikidata API.
     """
-    query = request.GET.get('q', '').strip()  # Kullanıcıdan gelen sorgu
-    local_results = Post.objects.none()  # Varsayılan olarak boş queryset
-    tag_results = Post.objects.none()  # Varsayılan olarak boş queryset
+    query = request.GET.get('q', '').strip()
+    local_results = Post.objects.none()
+    tag_results = Post.objects.none()
     wikidata_results = []
 
     if query:
-        # Yerel sonuçları getir
-        terms = query.replace(",", " ").split()  # Çok kelimeli sorguyu parçalara ayır
-        for term in terms:
-            local_results = local_results | Post.objects.filter(
-                Q(title__icontains=term) | Q(content__icontains=term)
-            )
+        # First, find all comments that match the search term
+        matching_comments = Comment.objects.filter(content__icontains=query)
+        
+        # Get the posts that have matching comments
+        posts_with_matching_comments = Post.objects.filter(comments__in=matching_comments)
+        
+        # Get posts that match the search term directly
+        matching_posts = Post.objects.filter(
+            Q(title__icontains=query) | 
+            Q(content__icontains=query)
+        )
+        
+        # Combine the results
+        local_results = (matching_posts | posts_with_matching_comments).distinct()
+        
+        # Search in tags
+        tag_results = Post.objects.filter(tags__name__icontains=query).distinct()
+        
+        # Debug prints
+        print(f"Query: {query}")
+        print(f"Matching comments found: {matching_comments.count()}")
+        for comment in matching_comments:
+            print(f"Comment match: '{comment.content[:50]}...' in post {comment.post.id}")
+        print(f"Posts with matching comments: {posts_with_matching_comments.count()}")
+        print(f"Direct post matches: {matching_posts.count()}")
+        print(f"Total unique results: {local_results.count()}")
 
-        # Etiket sonuçlarını getir
-        for term in terms:
-            tag_results = tag_results | Post.objects.filter(
-                Q(tags__name__icontains=term)
-            )
-
-        # Wikidata sonuçlarını getir
+        # Get Wikidata results
         wikidata_results = search_wikidata(query)
 
     context = {
         'query': query,
-        'local_results': local_results.distinct(),
-        'tag_results': tag_results.distinct(),
+        'local_results': local_results,
+        'tag_results': tag_results,
         'wikidata_results': wikidata_results,
     }
     return render(request, 'search_results.html', context)

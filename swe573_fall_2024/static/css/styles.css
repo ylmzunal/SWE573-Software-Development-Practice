@@ -613,3 +613,81 @@ h2 {
 .btn.nav-link[href="{% url 'register' %}"]:hover {
     background-color: #218838;   /* Daha koyu yeşil */
 }
+
+/* Post Details Action Buttons */
+.action-button {
+    display: inline-block;
+    padding: 8px 16px;
+    margin: 5px;
+    width: 140px;  /* Fixed width for all buttons */
+    text-align: center;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    transition: background-color 0.3s;
+    color: white;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.wikidata-search-btn {
+    background-color: green;
+}
+
+.wikidata-search-btn:hover {
+    background-color: #357abd;
+}
+
+.edit-post-btn {
+    background-color: #28a745;
+}
+
+.edit-post-btn:hover {
+    background-color: #218838;
+}
+
+.mark-solved-btn {
+    background-color: #6c757d;
+}
+
+.mark-solved-btn:hover {
+    background-color: #5a6268;
+}
+
+/* Properties Section */
+.properties-section {
+    font-size: 0.75rem;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.properties-section h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #495057;
+}
+
+.properties-section small {
+    font-size: 0.7rem;
+    color: #6c757d;
+}
+
+.properties-section p {
+    margin: 0.5rem 0;
+}
+
+/* Hide comment edit button on homepage */
+.is-homepage .comment-edit-btn {
+    display: none !important;
+}

@@ -65,9 +65,18 @@
                     <p class="image-caption">Current image</p>
                 </div>
                 {% endif %}
-                <label for="{{ form.image.id_for_label }}">Update Image</label>
-                {{ form.image }}
-                <small class="help-text">Supported formats: JPG, PNG, GIF (max 5MB)</small>
+                
+                <div class="image-controls">
+                    <label for="id_image">Image</label>
+                    <input type="file" name="image" id="id_image" accept="image/*">
+                    {% if post.image %}
+                        <div class="image-clear-option">
+                            <input type="checkbox" name="image-clear" id="image-clear">
+                            <label for="image-clear">Remove current image</label>
+                        </div>
+                    {% endif %}
+                    <small class="help-text">Supported formats: JPG, PNG, GIF (max 5MB)</small>
+                </div>
             </div>
 
             <div class="button-group">
@@ -79,9 +88,12 @@
 </body>
 
 <style>
-/* Add to existing post_form.css or include here */
+.image-upload {
+    margin: 20px 0;
+}
+
 .current-image {
-    margin-bottom: 1rem;
+    margin-bottom: 15px;
     text-align: center;
 }
 
@@ -92,10 +104,19 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.image-caption {
-    font-size: 0.875rem;
+.image-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.image-clear-option {
+    margin-top: 5px;
+}
+
+.help-text {
     color: #666;
-    margin-top: 0.5rem;
+    font-size: 0.875rem;
 }
 
 .button-group {
@@ -119,3 +140,31 @@
     background-color: #5a6268;
 }
 </style>
+
+<script>
+// Preview new image before upload
+document.getElementById('id_image').addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            let preview = document.querySelector('.preview-image');
+            if (!preview) {
+                preview = document.createElement('img');
+                preview.className = 'preview-image';
+                const container = document.createElement('div');
+                container.className = 'current-image';
+                container.appendChild(preview);
+                document.querySelector('.image-upload').insertBefore(container, document.querySelector('.image-controls'));
+            }
+            preview.src = e.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+        
+        // Uncheck clear checkbox if it exists
+        const clearCheckbox = document.getElementById('image-clear');
+        if (clearCheckbox) {
+            clearCheckbox.checked = false;
+        }
+    }
+});
+</script>

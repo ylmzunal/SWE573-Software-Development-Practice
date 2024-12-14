@@ -322,16 +322,18 @@
                 <!-- Buttons group -->
                 <div class="button-group">
                     <a href="{% url 'wikidata_search' %}?q={{ post.title }}" class="btn search-button">Search Wikidata</a>
+                    {% if can_edit %}
                     <a href="{% url 'edit_post' post.id %}" class="btn search-button">Edit Post</a>
+                    {% endif %}
                     <form method="POST" action="{% url 'mark_post_status' post.id %}" style="display: inline;">
                         {% csrf_token %}
-                        <button type="submit" class="btn search-button">
-                            {% if post.solved %}
-                                Mark as Unsolved
-                            {% else %}
-                                Mark as Solved
-                            {% endif %}
-                        </button>
+                            <button type="submit" class="btn search-button">
+                                {% if post.solved %}
+                                    Mark as Unsolved
+                                {% else %}
+                                    Mark as Solved
+                                {% endif %}
+                            </button>
                     </form>
                 </div>
 
@@ -360,45 +362,32 @@
                                     <div class="comment-header">
                                         <span class="comment-author">{{ comment.user.username }}</span>
                                         <span class="comment-date">{{ comment.created_at|date:"F d, Y, g:i a" }}</span>
-                                        {% if comment.user == request.user %}
-                                            <button class="edit-comment-btn btn btn-sm btn-outline-primary" 
-                                                    onclick="enableCommentEdit({{ comment.id }})">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </button>
+                                        {% if not is_homepage %}
+                                            {% if comment.user == request.user %}
+                                                <button class="edit-comment-btn btn btn-sm btn-outline-primary" 
+                                                        onclick="enableCommentEdit({{ comment.id }})">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                            {% endif %}
                                         {% endif %}
                                     </div>
                                     <p class="comment-text" id="comment-text-{{ comment.id }}">{{ comment.content }}</p>
-                                    {% if comment.user == request.user %}
-                                        <textarea class="form-control edit-comment-textarea" 
-                                                  id="comment-edit-{{ comment.id }}" 
-                                                  style="display: none;">{{ comment.content }}</textarea>
-                                        <div class="edit-buttons" id="edit-buttons-{{ comment.id }}" style="display: none;">
-                                            <button class="btn btn-sm btn-success" onclick="saveCommentEdit({{ comment.id }})">
-                                                Save
-                                            </button>
-                                            <button class="btn btn-sm btn-secondary" onclick="cancelCommentEdit({{ comment.id }})">
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    {% endif %}
                                     
-                                    <!-- Voting buttons -->
+                                    <!-- Voting buttons with initial vote counts -->
                                     <div class="vote-buttons">
                                         <button onclick="handleVote({{ comment.id }}, 'up')" 
                                                 class="vote-btn upvote-btn {% if comment.user_vote == 'up' %}voted{% endif %}">
                                             <i class="fas fa-arrow-up"></i>
-                                            <span id="upvotes-{{ comment.id }}">{{ comment.upvotes }}</span>
+                                            <span id="upvotes-{{ comment.id }}">{{ comment.upvotes|default:0 }}</span>
                                         </button>
                                         <button onclick="handleVote({{ comment.id }}, 'down')" 
                                                 class="vote-btn downvote-btn {% if comment.user_vote == 'down' %}voted{% endif %}">
                                             <i class="fas fa-arrow-down"></i>
-                                            <span id="downvotes-{{ comment.id }}">{{ comment.downvotes }}</span>
+                                            <span id="downvotes-{{ comment.id }}">{{ comment.downvotes|default:0 }}</span>
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                        {% empty %}
-                            <p class="no-comments">No comments yet.</p>
                         {% endfor %}
                     {% else %}
                         <p class="no-comments">No comments yet.</p>
@@ -629,14 +618,45 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to enable comment editing
     window.enableCommentEdit = function(commentId) {
         console.log('Enabling edit for comment:', commentId);
-        document.getElementById(`comment-text-${commentId}`).style.display = 'none';
-        document.getElementById(`comment-edit-${commentId}`).style.display = 'block';
-        document.getElementById(`edit-buttons-${commentId}`).style.display = 'flex';
+        
+        // Get the comment text element
+        const commentTextElement = document.getElementById(`comment-text-${commentId}`);
+        const commentText = commentTextElement.textContent;
+        
+        // Create textarea if it doesn't exist
+        let textareaElement = document.getElementById(`comment-edit-${commentId}`);
+        if (!textareaElement) {
+            textareaElement = document.createElement('textarea');
+            textareaElement.id = `comment-edit-${commentId}`;
+            textareaElement.className = 'form-control edit-comment-textarea';
+            textareaElement.value = commentText;
+            commentTextElement.parentNode.insertBefore(textareaElement, commentTextElement.nextSibling);
+        }
+        
+        // Create edit buttons if they don't exist
+        let editButtonsDiv = document.getElementById(`edit-buttons-${commentId}`);
+        if (!editButtonsDiv) {
+            editButtonsDiv = document.createElement('div');
+            editButtonsDiv.id = `edit-buttons-${commentId}`;
+            editButtonsDiv.className = 'edit-buttons';
+            editButtonsDiv.innerHTML = `
+                <button onclick="saveCommentEdit(${commentId})" class="btn btn-sm btn-success">Save</button>
+                <button onclick="cancelCommentEdit(${commentId})" class="btn btn-sm btn-secondary">Cancel</button>
+            `;
+            textareaElement.parentNode.insertBefore(editButtonsDiv, textareaElement.nextSibling);
+        }
+        
+        // Hide original text and show edit interface
+        commentTextElement.style.display = 'none';
+        textareaElement.style.display = 'block';
+        editButtonsDiv.style.display = 'flex';
     };
 
     // Function to cancel comment editing
     window.cancelCommentEdit = function(commentId) {
         console.log('Canceling edit for comment:', commentId);
+        
+        // Hide edit interface and show original text
         document.getElementById(`comment-edit-${commentId}`).style.display = 'none';
         document.getElementById(`edit-buttons-${commentId}`).style.display = 'none';
         document.getElementById(`comment-text-${commentId}`).style.display = 'block';
@@ -645,9 +665,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to save comment edit
     window.saveCommentEdit = function(commentId) {
         console.log('Saving edit for comment:', commentId);
+        
         const content = document.getElementById(`comment-edit-${commentId}`).value;
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
+        
         fetch(`/edit-comment/${commentId}/`, {
             method: 'POST',
             headers: {
@@ -660,29 +681,21 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 // Update the comment text
-                document.getElementById(`comment-text-${commentId}`).textContent = data.content;
+                document.getElementById(`comment-text-${commentId}`).textContent = content;
                 
-                // Update or add the edited indicator
-                let editedIndicator = document.getElementById(`edited-${commentId}`);
-                if (!editedIndicator) {
-                    const small = document.createElement('small');
-                    small.className = 'text-muted edited-indicator';
-                    small.id = `edited-${commentId}`;
-                    small.textContent = `(Edited on ${data.edited_at})`;
-                    document.querySelector(`#comment-${commentId} .comment-content`).appendChild(small);
-                } else {
-                    editedIndicator.textContent = `(Edited on ${data.edited_at})`;
-                }
-                
-                // Hide the edit interface
+                // Hide edit interface
                 cancelCommentEdit(commentId);
+                
+                // Show success message
+                console.log('Comment updated successfully');
             } else {
-                alert('Error saving comment: ' + (data.error || 'Unknown error'));
+                console.error('Error updating comment:', data.error);
+                alert('Error updating comment: ' + (data.error || 'Unknown error'));
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error saving comment. Please try again.');
+            alert('Error updating comment. Please try again.');
         });
     };
 });
