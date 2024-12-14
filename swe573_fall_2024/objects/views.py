@@ -818,18 +818,23 @@ def wikidata_search(request):
     wikidata_results = []
 
     if query:
-        # Get local results
-        terms = query.replace(",", " ").split()
-        for term in terms:
-            local_results = local_results | Post.objects.filter(
-                Q(title__icontains=term) | Q(content__icontains=term)
-            )
+        # First, find all comments that match the search term
+        matching_comments = Comment.objects.filter(content__icontains=query)
+        
+        # Get posts with matching comments
+        posts_with_matching_comments = Post.objects.filter(comments__in=matching_comments)
+        
+        # Get posts that match directly
+        matching_posts = Post.objects.filter(
+            Q(title__icontains=query) | 
+            Q(content__icontains=query)
+        )
+        
+        # Combine results
+        local_results = (matching_posts | posts_with_matching_comments).distinct()
 
         # Get tag results
-        for term in terms:
-            tag_results = tag_results | Post.objects.filter(
-                Q(tags__name__icontains=term)
-            )
+        tag_results = Post.objects.filter(tags__name__icontains=query).distinct()
 
         # Add filter properties to search if post_id exists
         if post_id:
@@ -840,7 +845,6 @@ def wikidata_search(request):
                 # Helper function to clean string list values
                 def clean_list_string(value):
                     if value:
-                        # Remove brackets, quotes, and split by comma
                         cleaned = value.strip('[]').replace("'", "").split(',')
                         return [item.strip() for item in cleaned]
                     return []
@@ -879,8 +883,8 @@ def wikidata_search(request):
 
     context = {
         'query': query,
-        'local_results': local_results.distinct(),
-        'tag_results': tag_results.distinct(),
+        'local_results': local_results,
+        'tag_results': tag_results,
         'wikidata_results': wikidata_results,
     }
     

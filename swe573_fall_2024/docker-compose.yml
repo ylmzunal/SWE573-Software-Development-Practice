@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=swe573_fall_2024.settings
+      - DEBUG=0
+    volumes:
+      - .:/app
+    command: gunicorn --bind 0.0.0.0:8000 swe573_fall_2024.wsgi:application
+
+  db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=object_finder_db
+      - MYSQL_USER=swe573
+      - MYSQL_PASSWORD=swe573user
+      - MYSQL_ROOT_PASSWORD=yu838600
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
