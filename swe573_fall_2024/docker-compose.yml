@@ -10,7 +10,7 @@ services:
       - DEBUG=0
     volumes:
       - .:/app
-    command: gunicorn --bind 0.0.0.0:8000 swe573_fall_2024.wsgi:application
+    command: gunicorn --bind 0.0.0.0:8080 swe573_fall_2024.wsgi:application
 
   db:
     image: mysql:8.0
