@@ -7,7 +7,7 @@ services:
       - "8000:8000"  # Django uygulamasına erişim portu
     environment:
       - DJANGO_SETTINGS_MODULE=swe573_fall_2024.settings
-      - DEBUG=False
+      - DEBUG=True
       - DB_NAME=object_finder_db
       - DB_USER=swe573
       - DB_PASSWORD=swe573user

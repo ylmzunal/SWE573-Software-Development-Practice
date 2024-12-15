@@ -103,7 +103,7 @@ DATABASES = {
     }
 }
 
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = True
 
 
 # Password validation
