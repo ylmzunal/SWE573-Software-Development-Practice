@@ -1,36 +1,15 @@
-version: '3.9'
+runtime: python
+env: flex
+entrypoint: gunicorn -b :$PORT myapp.wsgi
 
-services:
-  web:
-    build: .
-    ports:
-      - "8000:8000"  # Django uygulamasına erişim portu
-    environment:
-      - DJANGO_SETTINGS_MODULE=swe573_fall_2024.settings
-      - DEBUG=True
-      - DB_NAME=object_finder_db
-      - DB_USER=swe573
-      - DB_PASSWORD=swe573user
-      - DB_HOST=db  # MySQL servisi adı
-      - DB_PORT=3306
-    depends_on:
-      - db  # MySQL'in web başlamadan önce çalıştığından emin olur
-    volumes:
-      - .:/app  # Django proje dosyalarını konteynere bağlar
-    command: gunicorn --bind 0.0.0.0:8000 swe573_fall_2024.wsgi:application
+runtime_config:
+  python_version: 3.9
 
-  db:
-    image: mysql:8.0
-    container_name: mysql
-    environment:
-      MYSQL_DATABASE: object_finder_db
-      MYSQL_USER: swe573
-      MYSQL_PASSWORD: swe573user
-      MYSQL_ROOT_PASSWORD: yu838600
-    ports:
-      - "3306:3306"  # MySQL veritabanına erişim portu
-    volumes:
-      - mysql_data:/var/lib/mysql  # Veritabanı kalıcılığı için bir hacim tanımlayın
+env_variables:
+  DB_HOST: objectfinderdb.cjawmsuoif2a.eu-north-1.rds.amazonaws.com  # AWS RDS Endpoint
+  DB_USER: swe573                                                    # AWS RDS kullanıcı adı
+  DB_PASSWORD: swe573user                                            # AWS RDS şifresi
+  DB_NAME: objectfinderdb                                            # AWS RDS veritabanı adı
 
-volumes:
-  mysql_data:  # MySQL veritabanı dosyalarının saklanacağı kalıcı hacim
+beta_settings:
+  cloud_sql_instances: ""  # Cloud SQL kullanılmadığı için boş bırakıldı

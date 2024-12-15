@@ -40,7 +40,7 @@ SECRET_KEY = 'django-insecure-y%-m80((gm!odadtwj%zycme67&5ai)-%4ell5%36lzb@l1j8p
 # SECURITY WARNING: don't run with debug turned on in production!
 
 ALLOWED_HOSTS = ['*']
-
+DEBUG = True
 
 # Application definition
 
@@ -95,17 +95,14 @@ WSGI_APPLICATION = 'swe573_fall_2024.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql', # or mysql if using MySQL
-        'NAME': os.environ.get('DB_NAME', 'object_finder_db'),
-        'USER': os.environ.get('DB_USER', 'swe573'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'swe573user'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '3306'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'objectfinderdb',  # AWS RDS Veritabanı Adı
+        'USER': 'swe573',          # AWS RDS Kullanıcı Adı
+        'PASSWORD': 'swe573user',  # AWS RDS Şifresi
+        'HOST': 'objectfinderdb.cjawmsuoif2a.eu-north-1.rds.amazonaws.com',  # AWS RDS Endpoint
+        'PORT': '5432',            # PostgreSQL Varsayılan Portu
     }
 }
-
-DEBUG = True
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
