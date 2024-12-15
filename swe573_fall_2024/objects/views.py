@@ -8,11 +8,9 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count
 from django.urls import reverse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from PIL import Image
 import logging
-import spacy
 from SPARQLWrapper import SPARQLWrapper, JSON
 # from .utils import build_query_from_post, rank_wikidata_results
 # from .wikidata_utils import search_wikidata_nlp, build_attributes_for_sparql
@@ -192,26 +190,6 @@ def create_post(request):
     
     return render(request, 'post_form.html', context)
 
-# def create_post_ajax(request):
-#     if request.method == 'POST':
-#         form = PostForm(request.POST, request.FILES)  # Form verilerini ve dosyaları alın
-#         if form.is_valid():
-#             post = form.save(commit=False)
-#             post.author = request.user  # Mevcut kullanıcıyı yazara bağla
-#             post.save()
-
-#             # JSON yanıtında image_url bilgisi gönderin
-#             return JsonResponse({
-#                 'success': True,
-#                 'post': {
-#                     'id': post.id,
-#                     'title': post.title,
-#                     'content': post.content,
-#                     'author': post.author.username,
-#                     'image_url': post.image.url if post.image else None,  # Resim URL'si
-#                 }
-#             })
-#         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 def post_list_ajax(request):
     posts = Post.objects.all()
@@ -558,114 +536,7 @@ def update_bio(request):
             'message': str(e)
         }, status=500)
 
-######################### AI Agent ####################
 
-
-nlp = spacy.load("en_core_web_sm")
-
-def extract_keywords(text):
-    """Verilen metinden anahtar kelimeleri çıkarır."""
-    if not text:
-        print("No text provided to extract_keywords.")
-        return []
-    
-    doc = nlp(text)
-    keywords = [token.text.lower() for token in doc if token.is_alpha and not token.is_stop]
-    return keywords
-
-
-# def search_wikidata(keywords):
-#     """Wikidata üzerinde anahtar kelimelerle arama yapar ve Post-like sonuçlar döner."""
-#     if not keywords:
-#         print("No keywords provided for Wikidata search.")
-#         return []
-
-#     sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
-#     query_keywords = ' '.join(keywords)
-#     query = f"""
-#     SELECT ?item ?itemLabel ?description
-#     WHERE {{
-#         ?item ?label "{query_keywords}"@en.
-#         OPTIONAL {{ ?item schema:description ?description. FILTER (lang(?description) = "en") }}
-#         SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
-#     }}
-#     LIMIT 10
-#     """
-#     sparql.setQuery(query)
-#     sparql.setReturnFormat(JSON)
-
-#     try:
-#         results = sparql.query().convert()
-#         objects = []
-#         for result in results["results"]["bindings"]:
-#             objects.append({
-#                 "title": result["itemLabel"]["value"],
-#                 "content": result.get("description", {}).get("value", "No description available"),
-#                 "url": result["item"]["value"]
-#             })
-#         print("Wikidata search results:", objects)
-#         return objects
-#     except Exception as e:
-#         print(f"Error querying Wikidata: {e}")
-#         return []
-    
-
-
-def find_object_from_post(post_id):
-    print("find_object_from_post function is called with post_id:", post_id)
-    post = get_object_or_404(Post, id=post_id)
-    comments = post.comments.all()
-
-    # Post ve yorum içeriklerinden anahtar kelimeleri çıkar
-    # print("Post content:", post.content)
-    post_keywords = extract_keywords(post.content)
-    
-    comment_keywords = []
-    for comment in comments:
-        # print("Comment content:", comment.content)
-        comment_keywords.extend(extract_keywords(comment.content))
-
-    all_keywords = list(set(post_keywords + comment_keywords))
-    # print("All keywords extracted:", all_keywords)
-
-    # Etiketlerden anahtar kelimeleri ekle
-    tag_keywords = [tag.name.lower() for tag in post.tags.all()]
-    all_keywords.extend(tag_keywords)
-
-    # Wikidata'da arama yap
-    wikidata_results = "No results"    #search_wikidata(all_keywords)
-    # print("Wikidata results:", wikidata_results)
-
-    return {
-        'keywords': all_keywords,
-        'wikidata_results': wikidata_results
-    }
-
-
-# def search_wikidata(keywords):
-#     """Wikidata üzerinde anahtar kelimelerle arama yapar."""
-#     sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
-#     query = f"""
-#     SELECT ?item ?itemLabel
-#     WHERE {{
-#         ?item ?label "{' '.join(keywords)}"@en.
-#         SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
-#     }}
-#     LIMIT 10
-#     """
-#     sparql.setQuery(query)
-#     sparql.setReturnFormat(JSON)
-#     results = sparql.query().convert()
-
-#     objects = []
-#     for result in results["results"]["bindings"]:
-#         objects.append({
-#             "id": result["item"]["value"],
-#             "label": result["itemLabel"]["value"]
-#         })
-#     return objects
-
-# Wiki Old version
 
 def search_wikidata(query):
     """
@@ -754,29 +625,7 @@ def search_view(request):
     return render(request, 'search_results.html', context)
 
 
-# def analyze_post(request, post_id):
-#     """
-#     Post içeriğini analiz eden ana görünüm.
-#     """
-#     post = get_object_or_404(Post, id=post_id)
 
-#     # Post özelliklerinden SPARQL sorgusu oluştur
-#     attributes = build_attributes_for_sparql(post)
-
-#     # SPARQL sorgusunu çalıştır
-#     wikidata_results = search_wikidata_nlp(
-#         material=attributes.get("material"),
-#         size=attributes.get("size"),
-#         color=attributes.get("color"),
-#         shape=attributes.get("shape"),
-#         weight=attributes.get("weight"),
-#         limit=10
-#     )
-#     print("logg nlp:",search_wikidata_nlp(material="Q11426", size=7, color="Q372669", shape="Q815741", weight=0))
-#     return render(request, 'post_analysis.html', {
-#         'post': post,
-#         'wikidata_results': wikidata_results,
-#     })@login_required
 def edit_comment_view(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
     

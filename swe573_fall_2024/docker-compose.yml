@@ -4,23 +4,33 @@ services:
   web:
     build: .
     ports:
-      - "8000:8000"
+      - "8000:8000"  # Django uygulamasına erişim portu
     environment:
       - DJANGO_SETTINGS_MODULE=swe573_fall_2024.settings
-      - DEBUG=0
+      - DEBUG=False
+      - DB_NAME=object_finder_db
+      - DB_USER=swe573
+      - DB_PASSWORD=swe573user
+      - DB_HOST=db  # MySQL servisi adı
+      - DB_PORT=3306
+    depends_on:
+      - db  # MySQL'in web başlamadan önce çalıştığından emin olur
     volumes:
-      - .:/app
-    command: gunicorn --bind 0.0.0.0:8080 swe573_fall_2024.wsgi:application
+      - .:/app  # Django proje dosyalarını konteynere bağlar
+    command: gunicorn --bind 0.0.0.0:8000 swe573_fall_2024.wsgi:application
 
   db:
     image: mysql:8.0
+    container_name: mysql
     environment:
-      - MYSQL_DATABASE=object_finder_db
-      - MYSQL_USER=swe573
-      - MYSQL_PASSWORD=swe573user
-      - MYSQL_ROOT_PASSWORD=yu838600
+      MYSQL_DATABASE: object_finder_db
+      MYSQL_USER: swe573
+      MYSQL_PASSWORD: swe573user
+      MYSQL_ROOT_PASSWORD: yu838600
+    ports:
+      - "3306:3306"  # MySQL veritabanına erişim portu
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql  # Veritabanı kalıcılığı için bir hacim tanımlayın
 
 volumes:
-  mysql_data:
+  mysql_data:  # MySQL veritabanı dosyalarının saklanacağı kalıcı hacim

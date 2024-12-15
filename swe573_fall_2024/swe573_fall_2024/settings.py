@@ -37,7 +37,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 SECRET_KEY = 'django-insecure-y%-m80((gm!odadtwj%zycme67&5ai)-%4ell5%36lzb@l1j8p'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -92,16 +91,19 @@ WSGI_APPLICATION = 'swe573_fall_2024.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'object_finder_db',
-        'USER': 'swe573',  # replace with 'root' if using the root user
-        'PASSWORD': 'swe573user',  # replace with your password
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.mysql', # or mysql if using MySQL
+        'NAME': os.environ.get('DB_NAME', 'object_finder_db'),
+        'USER': os.environ.get('DB_USER', 'swe573'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'swe573user'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
     }
 }
+
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 
 # Password validation
