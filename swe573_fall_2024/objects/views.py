@@ -535,8 +535,45 @@ def update_bio(request):
             'success': False,
             'message': str(e)
         }, status=500)
+    
+    
+def extract_keywords(content):
+    # Örnek: Basit anahtar kelime çıkarımı
+    if not content:
+        return []
+    words = content.split()
+    keywords = [word for word in words if len(word) > 3]  # Uzunluğu 3'ten fazla olan kelimeleri al
+    return keywords
 
+def find_object_from_post(post_id):
+    print("find_object_from_post function is called with post_id:", post_id)
+    post = get_object_or_404(Post, id=post_id)
+    comments = post.comments.all()
 
+    # Post ve yorum içeriklerinden anahtar kelimeleri çıkar
+    # print("Post content:", post.content)
+    post_keywords = extract_keywords(post.content)
+    
+    comment_keywords = []
+    for comment in comments:
+        # print("Comment content:", comment.content)
+        comment_keywords.extend(extract_keywords(comment.content))
+
+    all_keywords = list(set(post_keywords + comment_keywords))
+    # print("All keywords extracted:", all_keywords)
+
+    # Etiketlerden anahtar kelimeleri ekle
+    tag_keywords = [tag.name.lower() for tag in post.tags.all()]
+    all_keywords.extend(tag_keywords)
+
+    # Wikidata'da arama yap
+    wikidata_results = "No results"    #search_wikidata(all_keywords)
+    # print("Wikidata results:", wikidata_results)
+
+    return {
+        'keywords': all_keywords,
+        'wikidata_results': wikidata_results
+    }
 
 def search_wikidata(query):
     """
