@@ -42,7 +42,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://swe573fall2024-849897479442.us-central1.run.app'  # Cloud Run URL'si
 ]
 ALLOWED_HOSTS = ['*']
-DEBUG = False
+DEBUG = True
 
 # Application definition
 
