@@ -1,4 +1,5 @@
 <!-- templates/registration/logged_out.html -->
 
+{% csrf_token %}
 <h2>Logged Out</h2>
 <p>You have been logged out. <a href="{% url 'login' %}">Log in again</a></p>

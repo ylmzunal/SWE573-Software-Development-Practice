@@ -238,6 +238,7 @@
             <div class="nav-section">
                 <div class="search-bar">
                     <form method="get" action="{% url 'wikidata_search' %}" id="search-form">
+                        {% csrf_token %}
                         <div class="search-input-group">
                             <input type="text" name="q" placeholder="Search Wikidata" class="search-input" value="{{ query }}">
                             <input type="hidden" name="post_id" value="{{ post.id }}">

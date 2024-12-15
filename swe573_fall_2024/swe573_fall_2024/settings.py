@@ -38,9 +38,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 SECRET_KEY = 'django-insecure-y%-m80((gm!odadtwj%zycme67&5ai)-%4ell5%36lzb@l1j8p'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-
+CSRF_TRUSTED_ORIGINS = [
+    'https://swe573fall2024-849897479442.us-central1.run.app'  # Cloud Run URL'si
+]
 ALLOWED_HOSTS = ['*']
-DEBUG = True
+DEBUG = False
 
 # Application definition
 

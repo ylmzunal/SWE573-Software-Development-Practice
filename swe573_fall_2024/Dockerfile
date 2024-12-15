@@ -5,13 +5,15 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
-    pkg-config \
-    default-libmysqlclient-dev \
-    gcc \
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y \
     build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
+    libpq-dev \
+    gcc \
+    pkg-config \
+    default-libmysqlclient-dev && \
+    rm -rf /var/lib/apt/lists/*
 # Copy requirements file
 COPY requirements.txt /app/
 
@@ -22,7 +24,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 COPY . /app/
 
 # Expose the port
-EXPOSE 8000
+EXPOSE 8080
 
 # Command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "swe573_fall_2024.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "swe573_fall_2024.wsgi:application"]
