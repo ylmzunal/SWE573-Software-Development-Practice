@@ -28,8 +28,19 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",  # Statik dosyaların kaynak klasörü
 ]
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# AWS S3 settings
+AWS_ACCESS_KEY_ID = 'AKIAQ4NSBDI7SHUS2X7A'  # Replace with your actual access key
+AWS_SECRET_ACCESS_KEY = 'mMMgqFBPPs8ozhL7OyLEA/6fv9OL8zgvBzVX+lXX'  # Replace with your actual secret key
+AWS_STORAGE_BUCKET_NAME = 'swe573finder-media'  # Replace with your actual bucket name
+AWS_S3_REGION_NAME = 'eu-north-1'  # e.g., 'us-west-1'
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+
+# Media files storage settings
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+
  
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
