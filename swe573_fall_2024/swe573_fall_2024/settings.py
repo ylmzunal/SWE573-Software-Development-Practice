@@ -35,7 +35,7 @@ AWS_ACCESS_KEY_ID = 'AKIAQ4NSBDI7SHUS2X7A'  # Replace with your actual access ke
 AWS_SECRET_ACCESS_KEY = 'mMMgqFBPPs8ozhL7OyLEA/6fv9OL8zgvBzVX+lXX'  # Replace with your actual secret key
 AWS_STORAGE_BUCKET_NAME = 'swe573finder-media'  # Replace with your actual bucket name
 AWS_S3_REGION_NAME = 'eu-north-1'  # e.g., 'us-west-1'
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
 
 # Media files storage settings
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
