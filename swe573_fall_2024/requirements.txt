@@ -56,3 +56,5 @@ whitenoise==6.8.2
 wrapt==1.16.0
 python-dotenv==1.0.1
 psycopg2==2.9.10
+boto3==1.34.0
+django-storages==1.13.2
