@@ -35,9 +35,10 @@ urlpatterns = [
     path('post/<int:post_id>/edit/', views.edit_post, name='edit_post'),
     path('post/<int:post_id>/mark-status/', views.mark_post_status, name='mark_post_status'),
     path('edit-comment/<int:comment_id>/', views.edit_comment, name='edit_comment'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] 
 
-
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 # urlpatterns = [
 #     path('', views.homepage, name='homepage'),
 #     path('accounts/register/', object_views.register, name='register'),

@@ -32,14 +32,18 @@ STATICFILES_DIRS = [
 # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # AWS S3 settings
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 AWS_ACCESS_KEY_ID = os.getenv("AKIAQ4NSBDI7SHUS2X7A")
 AWS_SECRET_ACCESS_KEY = os.getenv("mMMgqFBPPs8ozhL7OyLEA/6fv9OL8zgvBzVX+lXX")
 AWS_STORAGE_BUCKET_NAME = 'swe573finder-media'  # Replace with your actual bucket name
 AWS_S3_REGION_NAME = 'eu-north-1'  # e.g., 'us-west-1'
 AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_S3_SIGNATURE_VERSION = 's3v4'
 
 # Media files storage settings
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 
  
