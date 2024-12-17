@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from google.oauth2 import service_account
 from dotenv import load_dotenv
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -22,29 +23,50 @@ LOGIN_REDIRECT_URL = '/'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-STATIC_URL = 'static/'
-
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",  # Statik dosyaların kaynak klasörü
 ]
 
+STATIC_ROOT = BASE_DIR / "staticfiles"  # 'collectstatic' çıktıları için hedef klasör
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / "media"  # Yüklenen medya dosyalarının saklanacağı klasör
 # MEDIA_URL = '/media/'
 # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # AWS S3 settings
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-AWS_ACCESS_KEY_ID = os.getenv("AKIAQ4NSBDI7SHUS2X7A")
-AWS_SECRET_ACCESS_KEY = os.getenv("mMMgqFBPPs8ozhL7OyLEA/6fv9OL8zgvBzVX+lXX")
-AWS_STORAGE_BUCKET_NAME = 'swe573finder-media'  # Replace with your actual bucket name
-AWS_S3_REGION_NAME = 'eu-north-1'  # e.g., 'us-west-1'
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = None
-AWS_S3_SIGNATURE_VERSION = 's3v4'
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+# AWS_ACCESS_KEY_ID = os.getenv("AKIAQ4NSBDI73DXYVGVC")
+# AWS_SECRET_ACCESS_KEY = os.getenv("ihmw/TbdBw8oWSnGyRzyPLh01Zgfu5u0VT9udGRi")
+# AWS_STORAGE_BUCKET_NAME = 'swe573finder-media'  # Replace with your actual bucket name
+# AWS_S3_REGION_NAME = 'eu-north-1'  # e.g., 'us-west-1'
+# AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
 
-# Media files storage settings
-MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+# # Media files storage settings
+# MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+
+# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+# GS_BUCKET_NAME = 'swe573-media'  # Bucket adınız
+# GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+#     "/Users/yilmazunal/Desktop/SWE573-Software-Development-Practice/swe573_fall_2024/swe-573-fall-2024-6abce562c418.json"
+# )
+# # Optional but recommended settings
+# GS_PROJECT_ID = 'swe-573-fall-2024'
+# GS_DEFAULT_ACL = 'publicRead'  # Makes uploaded files publicly readable
+
+# # Media settings
+# MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
+# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+# MEDIA_ROOT = 'media/'  # Local media directory for development
+
+# # Make files publicly readable
+# GS_FILE_OVERWRITE = False  # Don't overwrite files with the same name
+# GS_QUERYSTRING_AUTH = False  # Don't add authentication tokens to URLs
+# # Medya Dosyalarının URL'si
+# MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
+
 
  
 # Quick-start development settings - unsuitable for production
@@ -70,7 +92,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # other apps
+    'storages',
     'objects',
 ]
 

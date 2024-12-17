@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "swe-573-fall-2024",
+  "private_key_id": "6abce562c418a011581aac5816c8f3fea5a62ab4",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDZuyNzxHKwpfrB\nf9OSPfP9FFONaxtJao3evDo9QkCNNW4NjRdxbCSmqU2F22RppTs9bah3SPy+Fckb\n5bZv0VaS49I6+mHKSiBxOvXwZegArMNpbAWwe3zhITFZgRryKR99X45GmTIMedFR\nRivQ4w5nB/kihzTlWE2v8x1soetQhvIpxfMvyK3Ps+DnB3euqvlSJUYXy/mPmqol\n+8Pd3bF0j2Gc2aFy3ZPCGyC6aYuyh01MMrX+GLMQk8gdRhX3EC6G2h/jrnwYoARU\nuEg/nM3GFFtOgXFxWUmF2lnqLEYYZF62w43MVbXoFG9X+eq09WRvdLHmZEoOkLwH\n6kcq9gklAgMBAAECggEAO/H5h0iJWRhBix/B5MwYzk9X16Iq/5IOIEpLcI06j4Yr\n2CBF2YzwJFCNjvKB2VJMFpQH41uddkoyNfOPQIbuon+F5IYGAXdaKkKU7sxnzTPD\nk1VR1a6SCbulRiK1BAINcOurlMVd0bCCUDGVI6w3zWcVEQwPpKskrHIvYjbMPj1+\n+fyOeL/k/2t0GOGuvceSZHP6fY3kXT/iiC/G0XW8UFBeOX8oGyv1TL5VPvGatz+L\nn4nIhQn03NrLxERY96H4aPXBU/3RSJ4bnXjfwvTiAvkmH7WBa9G5WuF+dv0k862A\nFOQisotgPxMlSRFthiqRkklmvabZhAW8x7aNdAhX6wKBgQD1dKuqY6rc3M2m59DM\nz+nN+wVJDlmmwA9M0VIJ4eZ7cE504wQvupPTZXJB29QVeD79cwDg/w8/j5TWRXsO\nvSDm1U1NTj/syKJMOUH7iPtiKKV7JwXGqrIKHqioiBgHpPF92d9QgOBqBxJB7D9U\nw6LymZqGIdomSxy9EIfh2rxkewKBgQDjFZK0flyEKpZwwfIx2sx9I/jhU9B2KkBc\n98jOG0GjFBz2//k3twZCgxmYCENVK/+kpDQ8bcYqktBM1hw1UOuG2FSZS+L7axlD\nAYp4ug4M/ZbtQHAUry81Su8TXYB93AAUgiu7LocnppdZ8lV3jP9y792+9a9xyra3\nr9ZEKXzm3wKBgQDAS4H9gA2o8DcRDkWPX0dtPr4aSOrFb2vNI6Pg6CBYDlj4y61I\n8yPClpRXsi/KDiVTDBjhLBE3G3ZgE5jfqB2xmePwr1/3UguMKcNemydN9EgIXj7x\nMGNA+FnrhotE2dzzWo/QEtc9WYLdMIdBEe+DngDoGnc8TtYZ7Gx37ZRwJwKBgQDX\nau2in4RwNF5GVRXGSYNW6zr7tiC5F9e62av6KU0YwMnBXo4yVkNv8SHkYWJOd9Cp\nhMOw14n3dRJ48VwND9h+MNYAHkcSrkRmlh2f7Q/LLv1vz4MDfDRSX+Vv/3EW9A53\nZgzKIpc/+/7z6rk9Edp6VCWNM0/dqKmwkvO18Y11DQKBgQDzPv2derDPxqPBoLKi\nzafqfcV59NVmUNhSeO0zSqyRTd8qRvMxMWPR5lmg3AEkFCI72YUa1Jwrwebmsfzn\nrgKAeMnolmwmIUjffv7Tgg5b1gjuSz/argpupJFA2cSj8mY4GQbDJtMcWCqEz34p\niGphgmsLACFkVe2FouCp3bAB8A==\n-----END PRIVATE KEY-----\n",
+  "client_email": "swe573-bucket-user@swe-573-fall-2024.iam.gserviceaccount.com",
+  "client_id": "114462471861010635768",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/swe573-bucket-user%40swe-573-fall-2024.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

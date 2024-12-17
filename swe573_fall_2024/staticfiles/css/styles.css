@@ -13,52 +13,189 @@ body {
     height: 100vh;
 }
 
-header {
-    display: flex;
-    justify-content: space-between; /* Positions brand on the left and nav on the right */
-    align-items: center; /* Ensures vertical alignment */
-    background-color: #6c9f3a; /* Background color */
-    padding: 10px 20px;
+
+/* Header Styles */
+.main-header {
+    background-color: #6c9f3a;
+    padding: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Brand Styling */
 .brand {
-    margin: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .brand h1 {
-    margin: 0;
-    font-size: 1.8em; /* Adjust the font size if needed */
     color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0;
+    letter-spacing: 0.5px;
 }
 
+.brand-tagline {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    margin-top: 4px;
+}
+
+/* Navigation Section */
+.nav-section {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+/* Search Bar */
+.search-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-right: 1rem;
+}
+
+.search-input {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    width: 250px;
+    font-size: 0.9rem;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.search-button {
+    padding: 0.5rem 1rem;
+    background-color: #558b2f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.search-button:hover {
+    background-color: #33691e;
+}
+
+/* Navigation Links */
 .nav-links {
     display: flex;
-    align-items: center; /* Align links vertically */
-    gap: 20px; /* Adds space between links */
+    align-items: center;
+    gap: 1rem;
 }
 
-.nav-links a,
-.nav-links .btn {
+/* Button Styles */
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 500;
     text-decoration: none;
-    color: white;
-    font-size: 1em;
-    font-weight: bold;
-    padding: 5px 10px;
-    border: 1px solid transparent;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: all 0.2s ease;
 }
 
-.nav-links a:hover,
-.nav-links .btn:hover {
+.create-post-btn {
+    background-color: #558b2f;
+    color: white;
+    border: 1px solid #558b2f;
+}
+
+.create-post-btn:hover {
+    background-color: #33691e;
+}
+
+.login-btn, .logout-btn {
+    background-color: transparent;
+    color: white;
+    border: 1px solid white;
+}
+
+.login-btn:hover, .logout-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.register-btn {
     background-color: white;
     color: #6c9f3a;
-    border-radius: 5px;
+    border: 1px solid white;
 }
 
-.nav-links .btn {
-    border: 1px solid white;
-    background-color: transparent;
-    cursor: pointer;
+.register-btn:hover {
+    background-color: #f5f5f5;
+}
+
+/* User Menu */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    text-decoration: none;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+}
+
+.username {
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .search-input {
+        width: 200px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .nav-section {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .search-bar {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .search-input {
+        width: 100%;
+    }
+
+    .nav-links {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 h3 {
@@ -76,11 +213,6 @@ h2 {
     margin-bottom: 20px;
 }
 
-.brand h1 {
-    margin: 0;
-    font-size: 1.5em;
-    color: rgb(180, 189, 180); /* Make the text green */
-}
 
 /* ---------------------------------- */
 /* Layout Styles */
@@ -110,38 +242,133 @@ h2 {
 /* ---------------------------------- */
 /* Post Styles */
 /* ---------------------------------- */
+/* ---------------------------------- */
+/* Post Details Styles */
+/* ---------------------------------- */
+/* ... (keep existing styles until main-content) ... */
 
-.post {
-    background-color: hwb(0 75% 24%);
-    border: 1px solid #161515;
-    border-radius: 5px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* Main Content - Post Details Styling */
+.main-content {
+    width: 70%;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #e7e2e2; /* Updated to match post-details background */
 }
 
-.post:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.post-image-container {
+.main-content #post-details {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    max-width: 500px;
-    margin: auto;
+    gap: 20px;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.post-image {
-    max-width: 100%;
+.main-content .post-content {
+    flex: 3; /* 3/4 ratio */
+    padding-right: 20px;
+    border-right: 1px solid #ddd;
+}
+
+.main-content .post-properties {
+    flex: 1; /* 1/4 ratio */
+    padding-left: 20px;
+}
+
+/* Post Content Images */
+.main-content .post-content img {
+    width: 100%;
+    height: auto;
     max-height: 300px;
     object-fit: cover;
-    border-radius: 5px;
+    border-radius: 8px;
+    margin-bottom: 20px;
 }
 
+/* Buttons in Post Details */
+.main-content button, 
+.main-content .button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.main-content button:hover, 
+.main-content .button:hover {
+    background-color: #45a049;
+}
+
+/* Button Group */
+.main-content .button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.main-content .button-group small {
+    color: #666;
+    font-size: 12px;
+    align-self: center;
+}
+
+/* Comments Section */
+.main-content #comments-section {
+    margin-top: 30px;
+}
+
+.main-content .comment {
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    font-family: "Georgia", serif;
+    font-style: italic;
+    color: #555;
+}
+
+.main-content .comment small {
+    display: block;
+    color: #999;
+    font-size: 12px;
+}
+
+/* Comment Form */
+.main-content #comment-form textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    margin-top: 10px;
+}
+
+.main-content #comment-form button {
+    margin-top: 10px;
+}
+
+/* Keep existing responsive styles and add new ones */
+@media (max-width: 768px) {
+    .main-content #post-details {
+        flex-direction: column;
+    }
+
+    .main-content .post-content {
+        padding-right: 0;
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 20px;
+    }
+
+    .main-content .post-properties {
+        padding-left: 0;
+        padding-top: 20px;
+    }
+}
 /* ---------------------------------- */
 /* Sidebar Styles */
 /* ---------------------------------- */
@@ -151,9 +378,17 @@ h2 {
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 5px;
-    background-color: #f9f9f9;
+    background-color: #e7e2e2;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Sidebar İçerisindeki Post Resimlerini Ortala */
+.sidebar .post img {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    border-radius: 5px;
 }
 
 .sidebar .post:hover {
@@ -164,7 +399,7 @@ h2 {
 .sidebar .post-meta {
     margin-top: 5px;
     font-size: 0.9em;
-    color: #555;
+    color: green;
     display: flex;
     justify-content: space-between;
 }
@@ -222,7 +457,7 @@ h2 {
     padding: 15px;
     font-size: 1.2em;
     color: #300303;
-    background-color: #007bff;
+    background-color: #8e8f90;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -230,7 +465,7 @@ h2 {
 }
 
 .form-button:hover {
-    background-color: #0056b3;
+    background-color: #a5a8ab;
 }
 
 /* ---------------------------------- */
@@ -343,4 +578,116 @@ h2 {
 .profile-container p {
     font-style: italic;
     color: #7f8c8d;
+}
+
+/* Genel Buton Stili */
+.btn {
+    display: inline-block;        /* Blok gibi davranmasını sağlar */
+    padding: 10px 20px;          /* İçerik kenarları arası boşluk */
+    background-color: #e7e2e2;   /* Arkaplan rengi (mavi ton) */
+    color: green;                /* Yazı rengi */
+    text-decoration: none;       /* Alt çizgiyi kaldırır */
+    border-radius: 5px;          /* Yuvarlak köşeler */
+    font-size: 16px;             /* Yazı boyutu */
+    font-weight: bold;           /* Yazı kalınlığı */
+    text-align: center;          /* Yazıyı ortalar */
+    cursor: pointer;             /* İmleç değişimi */
+    transition: background-color 0.3s ease; /* Hover efekti için geçiş süresi */
+}
+
+/* Hover Durumu (Üzerine Gelindiğinde) */
+.btn:hover {
+    background-color: #828384;   /* Daha koyu bir mavi */
+}
+
+/* Aktif Durumu (Tıklandığında) */
+.btn:active {
+    background-color: #003d80;   /* Daha koyu bir mavi tonu */
+}
+
+/* Ekstra: Register Butonuna Özel Renk */
+.btn.nav-link[href="{% url 'register' %}"] {
+    background-color: #28a745;   /* Yeşil ton */
+}
+
+.btn.nav-link[href="{% url 'register' %}"]:hover {
+    background-color: #218838;   /* Daha koyu yeşil */
+}
+
+/* Post Details Action Buttons */
+.action-button {
+    display: inline-block;
+    padding: 8px 16px;
+    margin: 5px;
+    width: 140px;  /* Fixed width for all buttons */
+    text-align: center;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    transition: background-color 0.3s;
+    color: white;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.wikidata-search-btn {
+    background-color: green;
+}
+
+.wikidata-search-btn:hover {
+    background-color: #357abd;
+}
+
+.edit-post-btn {
+    background-color: #28a745;
+}
+
+.edit-post-btn:hover {
+    background-color: #218838;
+}
+
+.mark-solved-btn {
+    background-color: #6c757d;
+}
+
+.mark-solved-btn:hover {
+    background-color: #5a6268;
+}
+
+/* Properties Section */
+.properties-section {
+    font-size: 0.75rem;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.properties-section h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #495057;
+}
+
+.properties-section small {
+    font-size: 0.7rem;
+    color: #6c757d;
+}
+
+.properties-section p {
+    margin: 0.5rem 0;
+}
+
+/* Hide comment edit button on homepage */
+.is-homepage .comment-edit-btn {
+    display: none !important;
 }

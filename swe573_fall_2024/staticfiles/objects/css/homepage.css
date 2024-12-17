@@ -1,0 +1,80 @@
+
+/* Post Content and Properties */
+.main-content.post-details-section .post-content {
+    flex: 3; /* 3/4 oranında */
+    padding-right: 20px;
+    border-right: 1px solid #ddd;
+}
+
+.main-content.post-details-section .post-properties {
+    flex: 1; /* 1/4 oranında */
+    padding-left: 20px;
+}
+
+.main-content.post-details-section h2 {
+    color: #6c9f3a;
+    font-size: 1.8em;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Post Images */
+.main-content.post-details-section .post-content img {
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+/* Buttons */
+.main-content.post-details-section button,
+.main-content.post-details-section .button {
+    background-color: #6c9f3a;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.main-content.post-details-section button:hover,
+.main-content.post-details-section .button:hover {
+    background-color: #5a872e; /* Daha koyu bir yeşil */
+}
+
+/* Comments */
+.main-content.post-details-section #comments-section {
+    margin-top: 30px;
+}
+
+.main-content.post-details-section .comment {
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    font-family: "Georgia", serif;
+    font-style: italic;
+    color: #555;
+}
+
+.main-content.post-details-section .comment small {
+    display: block;
+    color: #999;
+    font-size: 12px;
+}
+
+.main-content.post-details-section #comment-form textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    margin-top: 10px;
+}
+
+.main-content.post-details-section #comment-form button {
+    margin-top: 10px;
+}
