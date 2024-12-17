@@ -23,7 +23,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 COPY . /app/
 
 # Expose the port
-EXPOSE 8000
+EXPOSE 8080
 
 # Command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "swe573_fall_2024.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "swe573_fall_2024.wsgi:application"]
