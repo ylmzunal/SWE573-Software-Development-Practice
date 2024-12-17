@@ -146,38 +146,91 @@ def create_post_form(request):
 @login_required
 def create_post(request):
     if request.method == 'POST':
-        post_data = request.POST.copy()  # Make a mutable copy of the POST data
+        post_data = request.POST.copy()
         
         # Convert comma-separated strings to lists for multiple choice fields
         for field in ['material', 'color', 'shape']:
             if post_data.get(field):
                 values = post_data.get(field).split(',')
-                post_data.setlist(field, values)  # Set as list of individual values
+                post_data.setlist(field, values)
         
         form = PostForm(post_data, request.FILES)
-        print("Modified POST data:", post_data)
+        print("Files in request:", request.FILES)  # Debug print
         
         if form.is_valid():
             try:
                 post = form.save(commit=False)
                 post.author = request.user
                 
-                # Store the selections as comma-separated strings in the model
+                # Handle image upload
+                if 'image' in request.FILES:
+                    print("Processing image upload...")
+                    image_file = request.FILES['image']
+                    print(f"Received image: {image_file.name}, size: {image_file.size}")
+                    
+                    from google.cloud import storage
+                    from google.oauth2 import service_account
+                    
+                    credentials = service_account.Credentials.from_service_account_file(
+                        "swe-573-fall-2024-d6359380b76a.json"
+                    )
+                    client = storage.Client(
+                        credentials=credentials,
+                        project='swe-573-fall-2024'
+                    )
+                    bucket = client.bucket('swe573-media')
+                    print("Connected to bucket:", bucket.name)
+                    
+                    # Generate unique filename
+                    import uuid
+                    file_extension = os.path.splitext(image_file.name)[1]
+                    unique_filename = f"{uuid.uuid4()}{file_extension}"
+                    blob_path = f'post_images/{unique_filename}'
+                    
+                    print("Uploading to path:", blob_path)
+                    blob = bucket.blob(blob_path)
+                    
+                    # Reset file pointer
+                    image_file.seek(0)
+                    
+                    # Upload file
+                    blob.upload_from_file(
+                        image_file,
+                        content_type=image_file.content_type,
+                        size=image_file.size
+                    )
+                    print("File uploaded to GCS")
+                    
+                    # Make public
+                    blob.make_public()
+                    print("File made public")
+                    
+                    # Update post
+                    post.image = blob_path
+                    print("Updated post image path:", post.image)
+                
+                # Store the selections as comma-separated strings
                 post.material = ','.join(post_data.getlist('material'))
                 post.color = ','.join(post_data.getlist('color'))
                 post.shape = ','.join(post_data.getlist('shape'))
                 
                 post.save()
+                print("Post saved successfully")
                 messages.success(request, 'Post created successfully!')
                 return redirect('homepage')
+                
             except Exception as e:
-                print(f"Error saving post: {e}")
+                print(f"Error occurred: {type(e).__name__}")
+                print(f"Error details: {str(e)}")
+                import traceback
+                print(f"Traceback:\n{traceback.format_exc()}")
                 messages.error(request, f'Error creating post: {str(e)}')
         else:
             print("Form errors:", form.errors)
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f'{field}: {error}')
+
     else:
         form = PostForm()
 
@@ -291,39 +344,55 @@ def add_comment(request, post_id):
 def edit_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     
-    if request.user != post.author and not request.user.is_superuser:
-        messages.error(request, "You don't have permission to edit this post.")
-        return redirect('post_details', post_id=post.id)
-    
     if request.method == 'POST':
         try:
             # Handle image upload first
             if 'image' in request.FILES:
-                print("Processing new image upload")
+                print("1. Starting image upload process...")
                 image_file = request.FILES['image']
+                print(f"2. Received image: {image_file.name}, size: {image_file.size}")
                 
-                # Delete old image if exists
-                if post.image:
-                    try:
-                        post.image.delete()
-                    except Exception as e:
-                        print(f"Error deleting old image: {e}")
+                from google.cloud import storage
+                from google.oauth2 import service_account
                 
-                # Save new image
-                from django.core.files.storage import default_storage
-                from django.core.files.base import ContentFile
-                
-                path = default_storage.save(
-                    f'post_images/{image_file.name}',
-                    ContentFile(image_file.read())
+                print("3. Setting up GCS client...")
+                credentials = service_account.Credentials.from_service_account_file(
+                    "swe-573-fall-2024-d6359380b76a.json"
                 )
-                post.image = path
-            
-            # Handle image clearing
-            elif request.POST.get('image-clear') == 'on':
-                if post.image:
-                    post.image.delete()
-                post.image = None
+                client = storage.Client(
+                    credentials=credentials,
+                    project='swe-573-fall-2024'
+                )
+                bucket = client.bucket('swe573-media')
+                print("4. Connected to bucket:", bucket.name)
+                
+                # Generate unique filename
+                import uuid
+                file_extension = os.path.splitext(image_file.name)[1]
+                unique_filename = f"{uuid.uuid4()}{file_extension}"
+                blob_path = f'post_images/{unique_filename}'
+                
+                print("5. Uploading to path:", blob_path)
+                blob = bucket.blob(blob_path)
+                
+                # Reset file pointer
+                image_file.seek(0)
+                
+                # Upload file
+                blob.upload_from_file(
+                    image_file,
+                    content_type=image_file.content_type,
+                    size=image_file.size
+                )
+                print("6. File uploaded to GCS")
+                
+                # Make public
+                blob.make_public()
+                print("7. File made public")
+                
+                # Update post
+                post.image = blob_path
+                print("8. Updated post image path:", post.image)
             
             # Update other fields
             post.title = request.POST.get('title', post.title)
@@ -334,31 +403,24 @@ def edit_post(request, post_id):
             post.size = request.POST.get('size', post.size)
             post.weight = request.POST.get('weight', post.weight)
             
-            # Save the post
+            print("9. About to save post...")
             post.save()
+            print("10. Post saved successfully")
             
             messages.success(request, 'Post updated successfully!')
             return redirect('post_details', post_id=post.id)
             
         except Exception as e:
-            print(f"Error updating post: {str(e)}")
-            print(f"Exception type: {type(e)}")
+            print(f"Error occurred: {type(e).__name__}")
+            print(f"Error details: {str(e)}")
             import traceback
-            print(f"Traceback: {traceback.format_exc()}")
+            print(f"Traceback:\n{traceback.format_exc()}")
             messages.error(request, f'Error updating post: {str(e)}')
-            
-    # Get request or form invalid
-    initial_data = {
-        'material': post.material.split(',') if post.material else [],
-        'color': post.color.split(',') if post.color else [],
-        'shape': post.shape.split(',') if post.shape else [],
-    }
-    form = PostForm(instance=post, initial=initial_data)
     
+    form = PostForm(instance=post)
     context = {
         'form': form,
         'post': post,
-        'is_homepage': False,
         'material_choices': MATERIAL_CHOICES,
         'color_choices': COLOR_CHOICES,
         'shape_choices': SHAPE_CHOICES,

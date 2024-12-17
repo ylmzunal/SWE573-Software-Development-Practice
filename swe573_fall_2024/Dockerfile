@@ -1,30 +1,29 @@
-# Use Python 3.12 instead of 3.10
-FROM python:3.12-slim
+# Use Python 3.11 slim image
+FROM python:3.11-slim
 
-# Set the working directory
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Set work directory
 WORKDIR /app
 
 # Install system dependencies
-# Install system dependencies
-RUN apt-get update && \
-    apt-get install -y \
-    build-essential \
-    libpq-dev \
+RUN apt-get update && apt-get install -y \
     gcc \
-    pkg-config \
-    default-libmysqlclient-dev && \
-    rm -rf /var/lib/apt/lists/*
-# Copy requirements file
-COPY requirements.txt /app/
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Copy requirements first for better cache usage
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application files
-COPY . /app/
+# Copy the service account credentials and project files
+COPY swe-573-fall-2024-d6359380b76a.json .
+COPY . .
 
-# Expose the port
-EXPOSE 8080
+# Collect static files
+RUN python manage.py collectstatic --noinput
 
-# Command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "swe573_fall_2024.wsgi:application"]
+# Run gunicorn
+CMD ["gunicorn", "swe573_fall_2024.wsgi:application", "--bind", "0.0.0.0:8000"]

@@ -12,8 +12,12 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 #First version of the project
 from pathlib import Path
 import os
-# from google.oauth2 import service_account
+import json
 from dotenv import load_dotenv
+from google.cloud import storage
+from google.oauth2 import service_account
+from pathlib import Path
+
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,17 +25,68 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = '/'
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
+# Path to your service account JSON file (in project root)
+GOOGLE_APPLICATION_CREDENTIALS = BASE_DIR / 'swe-573-fall-2024-6abce562c418.json'
+
+# Basic settings remain the same...
+SECRET_KEY = 'django-insecure-y%-m80((gm!odadtwj%zycme67&5ai)-%4ell5%36lzb@l1j8p'
+DEBUG = True
+ALLOWED_HOSTS = ['*']
+
+# Static files configuration - matching your directory structure
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # This matches your 'staticfiles' directory
 STATICFILES_DIRS = [
-    BASE_DIR / "static",  # Statik dosyaların kaynak klasörü
+    BASE_DIR / 'static',  # This matches your 'static' directory
 ]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-STATIC_ROOT = BASE_DIR / "staticfiles"  # 'collectstatic' çıktıları için hedef klasör
+# settings.py
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / "media"  # Yüklenen medya dosyalarının saklanacağı klasör
+# settings.py
+
+# Google Cloud Storage settings
+from google.oauth2 import service_account
+
+GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+    BASE_DIR / 'swe-573-fall-2024-d6359380b76a.json'
+)
+DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+GS_BUCKET_NAME = 'swe573-media'
+GS_PROJECT_ID = 'swe-573-fall-2024'
+
+# Make files publicly readable
+GS_DEFAULT_ACL = 'publicRead'
+GS_BUCKET_ACL = 'publicRead'
+GS_FILE_OVERWRITE = False
+GS_QUERYSTRING_AUTH = False
+
+# Media settings
+MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Add debugging for file uploads
+if DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+            },
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['console'],
+                'level': 'INFO',
+            },
+            'google.cloud': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+            },
+        }
+    }
+
 # MEDIA_URL = '/media/'
 # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -80,7 +135,13 @@ CSRF_TRUSTED_ORIGINS = [
     'https://swe573finder-849897479442.us-central1.run.app',
     'https://swe573-software-development-practice.onrender.com', # Cloud Run URL'si
 ]
-ALLOWED_HOSTS = ['*']
+
+ALLOWED_HOSTS = [
+    'swe573finder-849897479442.us-central1.run.app',
+    'swe573-software-development-practice.onrender.com',
+    'localhost',
+    '127.0.0.1',
+]
 DEBUG = True
 
 # Application definition
