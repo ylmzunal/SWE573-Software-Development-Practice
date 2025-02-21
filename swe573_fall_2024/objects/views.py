@@ -17,6 +17,7 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 import json
 from django.contrib import messages
 import os
+from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -168,45 +169,23 @@ def create_post(request):
                     image_file = request.FILES['image']
                     print(f"Received image: {image_file.name}, size: {image_file.size}")
                     
-                    from google.cloud import storage
-                    from google.oauth2 import service_account
-                    
-                    credentials = service_account.Credentials.from_service_account_file(
-                        "swe-573-fall-2024-d6359380b76a.json"
-                    )
-                    client = storage.Client(
-                        credentials=credentials,
-                        project='swe-573-fall-2024'
-                    )
-                    bucket = client.bucket('swe573-media')
-                    print("Connected to bucket:", bucket.name)
-                    
-                    # Generate unique filename
+                    # Generate a unique filename
                     import uuid
                     file_extension = os.path.splitext(image_file.name)[1]
                     unique_filename = f"{uuid.uuid4()}{file_extension}"
-                    blob_path = f'post_images/{unique_filename}'
                     
-                    print("Uploading to path:", blob_path)
-                    blob = bucket.blob(blob_path)
+                    # Create the post_images directory if it doesn't exist
+                    upload_path = os.path.join('post_images', unique_filename)
+                    full_path = os.path.join(settings.MEDIA_ROOT, 'post_images')
+                    os.makedirs(full_path, exist_ok=True)
                     
-                    # Reset file pointer
-                    image_file.seek(0)
-                    
-                    # Upload file
-                    blob.upload_from_file(
-                        image_file,
-                        content_type=image_file.content_type,
-                        size=image_file.size
-                    )
-                    print("File uploaded to GCS")
-                    
-                    # Make public
-                    blob.make_public()
-                    print("File made public")
+                    # Save the file locally
+                    with open(os.path.join(settings.MEDIA_ROOT, upload_path), 'wb+') as destination:
+                        for chunk in image_file.chunks():
+                            destination.write(chunk)
                     
                     # Update post
-                    post.image = blob_path
+                    post.image = upload_path
                     print("Updated post image path:", post.image)
                 
                 # Store the selections as comma-separated strings
@@ -348,51 +327,25 @@ def edit_post(request, post_id):
         try:
             # Handle image upload first
             if 'image' in request.FILES:
-                print("1. Starting image upload process...")
-                image_file = request.FILES['image']
-                print(f"2. Received image: {image_file.name}, size: {image_file.size}")
-                
-                from google.cloud import storage
-                from google.oauth2 import service_account
-                
-                print("3. Setting up GCS client...")
-                credentials = service_account.Credentials.from_service_account_file(
-                    "swe-573-fall-2024-d6359380b76a.json"
-                )
-                client = storage.Client(
-                    credentials=credentials,
-                    project='swe-573-fall-2024'
-                )
-                bucket = client.bucket('swe573-media')
-                print("4. Connected to bucket:", bucket.name)
-                
-                # Generate unique filename
+                image = request.FILES['image']
+                # Generate a unique filename
                 import uuid
-                file_extension = os.path.splitext(image_file.name)[1]
+                file_extension = os.path.splitext(image.name)[1]
                 unique_filename = f"{uuid.uuid4()}{file_extension}"
-                blob_path = f'post_images/{unique_filename}'
                 
-                print("5. Uploading to path:", blob_path)
-                blob = bucket.blob(blob_path)
+                # Create the post_images directory if it doesn't exist
+                upload_path = os.path.join('post_images', unique_filename)
+                full_path = os.path.join(settings.MEDIA_ROOT, 'post_images')
+                os.makedirs(full_path, exist_ok=True)
                 
-                # Reset file pointer
-                image_file.seek(0)
-                
-                # Upload file
-                blob.upload_from_file(
-                    image_file,
-                    content_type=image_file.content_type,
-                    size=image_file.size
-                )
-                print("6. File uploaded to GCS")
-                
-                # Make public
-                blob.make_public()
-                print("7. File made public")
+                # Save the file locally
+                with open(os.path.join(settings.MEDIA_ROOT, upload_path), 'wb+') as destination:
+                    for chunk in image.chunks():
+                        destination.write(chunk)
                 
                 # Update post
-                post.image = blob_path
-                print("8. Updated post image path:", post.image)
+                post.image = upload_path
+                post.save()
             
             # Update other fields
             post.title = request.POST.get('title', post.title)
@@ -403,9 +356,7 @@ def edit_post(request, post_id):
             post.size = request.POST.get('size', post.size)
             post.weight = request.POST.get('weight', post.weight)
             
-            print("9. About to save post...")
             post.save()
-            print("10. Post saved successfully")
             
             messages.success(request, 'Post updated successfully!')
             return redirect('post_details', post_id=post.id)

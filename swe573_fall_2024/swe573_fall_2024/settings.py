@@ -14,8 +14,6 @@ from pathlib import Path
 import os
 import json
 from dotenv import load_dotenv
-from google.cloud import storage
-from google.oauth2 import service_account
 from pathlib import Path
 
 load_dotenv()
@@ -173,7 +171,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
