@@ -678,17 +678,18 @@ def search_view(request):
 
 def edit_comment_view(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
+    post = comment.post  # Get the post from the comment
     
     if request.method == 'POST':
         content = request.POST.get('content', '').strip()
         if content:
             comment.content = content
             comment.save()
-            return redirect('post_details', post_id=post.id)  # Use post.id for redirect
+            return redirect('post_details', post_id=post.id)
     
     return render(request, 'objects/edit_comment.html', {
         'comment': comment,
-        'post': post  # Add post to context
+        'post': post
     })
 
 @login_required
