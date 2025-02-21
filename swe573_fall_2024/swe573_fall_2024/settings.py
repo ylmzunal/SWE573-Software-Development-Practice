@@ -26,101 +26,13 @@ LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = '/'
 
 # Path to your service account JSON file (in project root)
-GOOGLE_APPLICATION_CREDENTIALS = BASE_DIR / 'swe-573-fall-2024-6abce562c418.json'
 
 # Basic settings remain the same...
 SECRET_KEY = 'django-insecure-y%-m80((gm!odadtwj%zycme67&5ai)-%4ell5%36lzb@l1j8p'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
-# Static files configuration - matching your directory structure
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # This matches your 'staticfiles' directory
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',  # This matches your 'static' directory
-]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# settings.py
-
-# settings.py
-
-# Google Cloud Storage settings
-from google.oauth2 import service_account
-
-GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-    BASE_DIR / 'swe-573-fall-2024-d6359380b76a.json'
-)
-DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-GS_BUCKET_NAME = 'swe573-media'
-GS_PROJECT_ID = 'swe-573-fall-2024'
-
-# Make files publicly readable
-GS_DEFAULT_ACL = 'publicRead'
-GS_BUCKET_ACL = 'publicRead'
-GS_FILE_OVERWRITE = False
-GS_QUERYSTRING_AUTH = False
-
-# Media settings
-MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-# Add debugging for file uploads
-if DEBUG:
-    LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'handlers': {
-            'console': {
-                'class': 'logging.StreamHandler',
-            },
-        },
-        'loggers': {
-            'django': {
-                'handlers': ['console'],
-                'level': 'INFO',
-            },
-            'google.cloud': {
-                'handlers': ['console'],
-                'level': 'DEBUG',
-            },
-        }
-    }
-
-# MEDIA_URL = '/media/'
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# AWS S3 settings
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-# STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-# AWS_ACCESS_KEY_ID = os.getenv("AKIAQ4NSBDI73DXYVGVC")
-# AWS_SECRET_ACCESS_KEY = os.getenv("ihmw/TbdBw8oWSnGyRzyPLh01Zgfu5u0VT9udGRi")
-# AWS_STORAGE_BUCKET_NAME = 'swe573finder-media'  # Replace with your actual bucket name
-# AWS_S3_REGION_NAME = 'eu-north-1'  # e.g., 'us-west-1'
-# AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
-
-# # Media files storage settings
-# MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
-
-# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-# GS_BUCKET_NAME = 'swe573-media'  # Bucket adınız
-# GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-#     "/Users/yilmazunal/Desktop/SWE573-Software-Development-Practice/swe573_fall_2024/swe-573-fall-2024-6abce562c418.json"
-# )
-# # Optional but recommended settings
-# GS_PROJECT_ID = 'swe-573-fall-2024'
-# GS_DEFAULT_ACL = 'publicRead'  # Makes uploaded files publicly readable
-
-# # Media settings
-# MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
-# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-# MEDIA_ROOT = 'media/'  # Local media directory for development
-
-# # Make files publicly readable
-# GS_FILE_OVERWRITE = False  # Don't overwrite files with the same name
-# GS_QUERYSTRING_AUTH = False  # Don't add authentication tokens to URLs
-# # Medya Dosyalarının URL'si
-# MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
 
 
  
@@ -153,14 +65,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'storages',
     'objects',
 ]
 
 MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -184,8 +94,8 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
             ],
-        },
-    },
+},
+},
 ]
 
 WSGI_APPLICATION = 'swe573_fall_2024.wsgi.application'
@@ -195,16 +105,24 @@ WSGI_APPLICATION = 'swe573_fall_2024.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 
+import os
+import environ
+
+# Load environment variables
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'objectfinderdb',  # AWS RDS Veritabanı Adı
-        'USER': 'swe573',          # AWS RDS Kullanıcı Adı
-        'PASSWORD': 'swe573user',  # AWS RDS Şifresi
-        'HOST': 'objectfinderdb.cjawmsuoif2a.eu-north-1.rds.amazonaws.com',  # AWS RDS Endpoint
-        'PORT': '5432',            # PostgreSQL Varsayılan Portu
-    }
+        'default': {
+            'ENGINE': env('DATABASE_ENGINE', default='django.db.backends.postgresql'),
+            'NAME': env('DATABASE_NAME', default='swe573_db'),
+            'USER': env('DATABASE_USER', default='swe573_user'),
+            'PASSWORD': env('DATABASE_PASSWORD', default='your_secure_password'),
+            'HOST': env('DATABASE_HOST', default='localhost'),
+            'PORT': env('DATABASE_PORT', default='5432'),
 }
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -212,16 +130,16 @@ DATABASES = {
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
+},
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
+},
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
+},
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+},
 ]
 
 
@@ -238,8 +156,24 @@ USE_TZ = True
 
 
 # Yüklenen medya dosyalarının kaydedileceği yer
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Media files (local storage)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Ensure Django serves media files in development
+
+
+# Static and Media files for Local Development
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
